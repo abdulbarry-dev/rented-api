@@ -59,4 +59,33 @@ class AuthService
     {
         return $user->currentAccessToken()->delete();
     }
+
+    /**
+     * Update user profile.
+     *
+     * @throws \Exception
+     */
+    public function updateProfile(User $user, array $data): User
+    {
+        // If password is being changed, verify current password
+        if (isset($data['password'])) {
+            if (! isset($data['current_password'])) {
+                throw new \Exception('Current password is required to change password.');
+            }
+
+            if (! Hash::check($data['current_password'], $user->password)) {
+                throw new \Exception('Current password is incorrect.');
+            }
+
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        // Remove current_password from data array
+        unset($data['current_password'], $data['password_confirmation']);
+
+        // Update user
+        $user->update(array_filter($data));
+
+        return $user->fresh();
+    }
 }

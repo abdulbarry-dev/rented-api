@@ -37,6 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
+    // Phase 6 - User Profile Management
+    Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+
     // Phase 3 - User Verification
     Route::post('/verify', [VerificationController::class, 'upload']);
     Route::get('/verify/status', [VerificationController::class, 'status']);
