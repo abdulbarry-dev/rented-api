@@ -1,0 +1,81 @@
+services:
+  # Laravel Application with Octane
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rented_api_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=rented_db
+      - DB_USERNAME=rented_user
+      - DB_PASSWORD=rented_secret
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - rented_network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: rented_api_postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: rented_db
+      POSTGRES_USER: rented_user
+      POSTGRES_PASSWORD: rented_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rented_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rented_user -d rented_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: rented_api_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - rented_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  rented_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
