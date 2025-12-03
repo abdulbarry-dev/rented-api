@@ -38,4 +38,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Phase 3 - User Verification
     Route::post('/verify', [VerificationController::class, 'upload']);
     Route::get('/verify/status', [VerificationController::class, 'status']);
+
+    // Phase 4 - Product Management CRUD (Verified Users Only)
+    Route::middleware('verified')->group(function () {
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{id}', [ProductController::class, 'update']);
+        Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    });
+
+    // User's Products (Authentication Required, No Verification Required)
+    Route::get('/user/products', [ProductController::class, 'userProducts']);
 });
