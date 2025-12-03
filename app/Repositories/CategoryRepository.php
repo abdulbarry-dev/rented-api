@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryRepository
 {
@@ -12,9 +13,11 @@ class CategoryRepository
      */
     public function getAll(): Collection
     {
-        return Category::where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        return Cache::remember('categories.all', 3600, function () {
+            return Category::where('is_active', true)
+                ->orderBy('name')
+                ->get();
+        });
     }
 
     /**
@@ -22,7 +25,9 @@ class CategoryRepository
      */
     public function findById(int $id): ?Category
     {
-        return Category::find($id);
+        return Cache::remember("categories.{$id}", 3600, function () use ($id) {
+            return Category::find($id);
+        });
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class ProductRepository
 {
@@ -14,10 +15,15 @@ class ProductRepository
      */
     public function getAllPaginated(int $perPage = 15): LengthAwarePaginator
     {
-        return Product::with('category')
-            ->where('is_available', true)
-            ->latest()
-            ->paginate($perPage);
+        $page = request()->get('page', 1);
+        $cacheKey = "products.paginated.page.{$page}.per_page.{$perPage}";
+
+        return Cache::remember($cacheKey, 600, function () use ($perPage) {
+            return Product::with('category')
+                ->where('is_available', true)
+                ->latest()
+                ->paginate($perPage);
+        });
     }
 
     /**
@@ -25,10 +31,12 @@ class ProductRepository
      */
     public function getAll(): Collection
     {
-        return Product::with('category')
-            ->where('is_available', true)
-            ->latest()
-            ->get();
+        return Cache::remember('products.all', 600, function () {
+            return Product::with('category')
+                ->where('is_available', true)
+                ->latest()
+                ->get();
+        });
     }
 
     /**
@@ -37,8 +45,10 @@ class ProductRepository
      */
     public function findById(int $id): ?Product
     {
-        return Product::with(['category', 'user'])
-            ->find($id);
+        return Cache::remember("products.{$id}", 600, function () use ($id) {
+            return Product::with(['category', 'user'])
+                ->find($id);
+        });
     }
 
     /**

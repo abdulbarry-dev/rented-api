@@ -8,6 +8,7 @@ use App\Repositories\ProductRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class ProductService
@@ -74,7 +75,12 @@ class ProductService
         $data['is_available'] = $data['is_available'] ?? true;
         $data['is_for_sale'] = $data['is_for_sale'] ?? false;
 
-        return $this->repository->create($data);
+        $product = $this->repository->create($data);
+
+        // Clear product caches
+        $this->clearProductCaches();
+
+        return $product;
     }
 
     /**
@@ -109,6 +115,9 @@ class ProductService
 
         $this->repository->update($product, $data);
 
+        // Clear product caches
+        $this->clearProductCaches($product->id);
+
         return $product->fresh();
     }
 
@@ -117,6 +126,8 @@ class ProductService
      */
     public function deleteProduct(Product $product): bool
     {
+        $productId = $product->id;
+
         // Delete associated files
         if ($product->thumbnail) {
             Storage::disk('public')->delete($product->thumbnail);
@@ -128,7 +139,12 @@ class ProductService
             }
         }
 
-        return $this->repository->delete($product);
+        $result = $this->repository->delete($product);
+
+        // Clear product caches
+        $this->clearProductCaches($productId);
+
+        return $result;
     }
 
     /**
@@ -137,5 +153,24 @@ class ProductService
     private function uploadFile(UploadedFile $file, string $directory): string
     {
         return $file->store($directory, 'public');
+    }
+
+    /**
+     * Clear product-related caches.
+     */
+    private function clearProductCaches(?int $productId = null): void
+    {
+        // Clear all products cache
+        Cache::forget('products.all');
+
+        // Clear paginated caches (clear first 10 pages)
+        for ($page = 1; $page <= 10; $page++) {
+            Cache::forget("products.paginated.page.{$page}.per_page.15");
+        }
+
+        // Clear specific product cache if ID provided
+        if ($productId) {
+            Cache::forget("products.{$productId}");
+        }
     }
 }
