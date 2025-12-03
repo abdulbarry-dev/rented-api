@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -55,5 +56,21 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Get all rentals for the product.
+     */
+    public function rentals(): HasMany
+    {
+        return $this->hasMany(Rental::class);
+    }
+
+    /**
+     * Get all purchases for the product.
+     */
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
     }
 }

@@ -73,4 +73,20 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserVerification::class);
     }
+
+    /**
+     * Get all rentals made by the user.
+     */
+    public function rentals(): HasMany
+    {
+        return $this->hasMany(Rental::class, 'renter_id');
+    }
+
+    /**
+     * Get all purchases made by the user.
+     */
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class, 'buyer_id');
+    }
 }

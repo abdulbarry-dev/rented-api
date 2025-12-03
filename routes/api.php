@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\PurchaseController;
+use App\Http\Controllers\Api\RentalController;
 use App\Http\Controllers\Api\VerificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,4 +50,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // User's Products (Authentication Required, No Verification Required)
     Route::get('/user/products', [ProductController::class, 'userProducts']);
+
+    // Phase 5 - Renting & Buying Flow (Authenticated Users)
+    // Rentals
+    Route::post('/rentals', [RentalController::class, 'store']);
+    Route::put('/rentals/{id}', [RentalController::class, 'update']);
+    Route::get('/user/rentals', [RentalController::class, 'userRentals']);
+    Route::get('/products/{productId}/rentals', [RentalController::class, 'productRentals']);
+
+    // Purchases
+    Route::post('/purchases', [PurchaseController::class, 'store']);
+    Route::put('/purchases/{id}/complete', [PurchaseController::class, 'complete']);
+    Route::put('/purchases/{id}/cancel', [PurchaseController::class, 'cancel']);
+    Route::get('/user/purchases', [PurchaseController::class, 'userPurchases']);
 });
