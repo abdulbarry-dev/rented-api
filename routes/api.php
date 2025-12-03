@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // API Status endpoint
@@ -11,9 +11,13 @@ Route::get('/', function () {
         'status' => 'success',
         'message' => 'API is working',
         'version' => 'v1',
-        'timestamp' => now()->toIso8601String()
+        'timestamp' => now()->toIso8601String(),
     ]);
 });
+
+// Phase 2 - Authentication (No Authentication Required)
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 // Phase 1 - Public API (No Authentication Required)
 // Products - Read-only public endpoints
@@ -24,3 +28,9 @@ Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{id}', [CategoryController::class, 'show']);
 
+// Protected Routes (Require Authentication)
+Route::middleware('auth:sanctum')->group(function () {
+    // Authentication
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+});
