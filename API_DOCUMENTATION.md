@@ -31,7 +31,6 @@
 The Rented Marketplace API is a RESTful API that allows users to rent or purchase items. The API provides endpoints for user management, product listings, rentals, and purchases.
 
 ### Key Features
-
 - Token-based authentication (Laravel Sanctum)
 - User verification system
 - Product management (CRUD operations)
@@ -41,7 +40,6 @@ The Rented Marketplace API is a RESTful API that allows users to rent or purchas
 - Caching for improved performance
 
 ### API Characteristics
-
 - **Architecture**: REST
 - **Data Format**: JSON
 - **Authentication**: Bearer Token (Sanctum)
@@ -53,19 +51,16 @@ The Rented Marketplace API is a RESTful API that allows users to rent or purchas
 ## Base URL & Versioning
 
 ### Development
-
 ```
 http://localhost:8000/api/v1
 ```
 
 ### Production
-
 ```
 https://api.rentedmarketplace.com/api/v1
 ```
 
 ### API Versioning
-
 All endpoints are prefixed with `/api/v1/`. Future versions will use `/api/v2/`, etc.
 
 ---
@@ -87,7 +82,6 @@ Authorization: Bearer {your-token-here}
 ```
 
 ### Token Lifecycle
-
 - Tokens do not expire automatically
 - Tokens are revoked on logout
 - Users can have multiple active tokens (different devices)
@@ -257,7 +251,6 @@ HTTP/1.1 204 No Content
 The API implements rate limiting to prevent abuse.
 
 ### Default Limits
-
 - **Public Endpoints**: 60 requests per minute
 - **Authenticated Endpoints**: 120 requests per minute
 
@@ -294,14 +287,12 @@ Get the current status of the API.
 **Authentication**: Not required
 
 **Request Example**:
-
 ```bash
 curl -X GET "http://localhost:8000/api/v1/" \
   -H "Accept: application/json"
 ```
 
 **Response** (200 OK):
-
 ```json
 {
   "status": "success",
@@ -324,7 +315,6 @@ Create a new user account.
 **Authentication**: Not required
 
 **Request Body**:
-
 ```json
 {
   "name": "John Doe",
@@ -335,13 +325,11 @@ Create a new user account.
 ```
 
 **Validation Rules**:
-
 - `name`: required, string, max:255
 - `email`: required, email, unique, max:255
 - `password`: required, string, min:8, confirmed
 
 **Response** (201 Created):
-
 ```json
 {
   "message": "User registered successfully",
@@ -360,7 +348,6 @@ Create a new user account.
 **Error Responses**:
 
 *422 Unprocessable Entity* - Validation failed
-
 ```json
 {
   "message": "The given data was invalid.",
@@ -386,7 +373,6 @@ Authenticate a user and receive an access token.
 **Authentication**: Not required
 
 **Request Body**:
-
 ```json
 {
   "email": "john.doe@example.com",
@@ -395,12 +381,10 @@ Authenticate a user and receive an access token.
 ```
 
 **Validation Rules**:
-
 - `email`: required, email
 - `password`: required, string
 
 **Response** (200 OK):
-
 ```json
 {
   "message": "Login successful",
@@ -418,7 +402,6 @@ Authenticate a user and receive an access token.
 **Error Responses**:
 
 *422 Unprocessable Entity* - Invalid credentials
-
 ```json
 {
   "message": "The given data was invalid.",
@@ -441,13 +424,11 @@ Revoke the current access token.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 ```
 
 **Response** (200 OK):
-
 ```json
 {
   "message": "Logged out successfully"
@@ -457,7 +438,6 @@ Authorization: Bearer {token}
 **Error Responses**:
 
 *401 Unauthorized* - Invalid or missing token
-
 ```json
 {
   "message": "Unauthenticated."
@@ -475,13 +455,11 @@ Retrieve the authenticated user's profile.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 ```
 
 **Response** (200 OK):
-
 ```json
 {
   "data": {
@@ -509,14 +487,12 @@ Update the authenticated user's profile information.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 Content-Type: application/json
 ```
 
 **Request Body** (Update Name):
-
 ```json
 {
   "name": "John Updated Doe"
@@ -524,7 +500,6 @@ Content-Type: application/json
 ```
 
 **Request Body** (Update Email):
-
 ```json
 {
   "email": "newemail@example.com"
@@ -532,7 +507,6 @@ Content-Type: application/json
 ```
 
 **Request Body** (Change Password):
-
 ```json
 {
   "current_password": "SecurePass123!",
@@ -542,7 +516,6 @@ Content-Type: application/json
 ```
 
 **Request Body** (Update Multiple Fields):
-
 ```json
 {
   "name": "John Updated Doe",
@@ -554,14 +527,12 @@ Content-Type: application/json
 ```
 
 **Validation Rules**:
-
 - `name`: sometimes, string, max:255
 - `email`: sometimes, email, unique (excluding current user), max:255
 - `current_password`: required_with:password, string
 - `password`: sometimes, string, min:8, confirmed
 
 **Response** (200 OK):
-
 ```json
 {
   "message": "Profile updated successfully",
@@ -579,7 +550,6 @@ Content-Type: application/json
 **Error Responses**:
 
 *400 Bad Request* - Current password incorrect
-
 ```json
 {
   "message": "Current password is incorrect."
@@ -587,7 +557,6 @@ Content-Type: application/json
 ```
 
 *422 Unprocessable Entity* - Validation failed
-
 ```json
 {
   "message": "The given data was invalid.",
@@ -615,7 +584,6 @@ Retrieve a list of all active categories.
 **Authentication**: Not required
 
 **Response** (200 OK):
-
 ```json
 {
   "data": [
@@ -657,11 +625,9 @@ Retrieve details of a specific category.
 **Authentication**: Not required
 
 **Path Parameters**:
-
 - `id` (integer, required): Category ID
 
 **Response** (200 OK):
-
 ```json
 {
   "data": {
@@ -677,7 +643,6 @@ Retrieve details of a specific category.
 **Error Responses**:
 
 *404 Not Found* - Category doesn't exist
-
 ```json
 {
   "message": "Resource not found."
@@ -697,18 +662,15 @@ Retrieve a paginated list of all available products.
 **Authentication**: Not required
 
 **Query Parameters**:
-
 - `page` (integer, optional): Page number (default: 1)
 - `per_page` (integer, optional): Items per page (default: 15, max: 100)
 
 **Request Example**:
-
 ```bash
 GET /products?page=2&per_page=20
 ```
 
 **Response** (200 OK):
-
 ```json
 {
   "data": [
@@ -762,11 +724,9 @@ Retrieve details of a specific product.
 **Authentication**: Not required
 
 **Path Parameters**:
-
 - `id` (integer, required): Product ID
 
 **Response** (200 OK):
-
 ```json
 {
   "data": {
@@ -803,7 +763,6 @@ Retrieve details of a specific product.
 **Error Responses**:
 
 *404 Not Found* - Product doesn't exist
-
 ```json
 {
   "message": "Resource not found."
@@ -825,24 +784,20 @@ Upload identification documents for user verification.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 ```
 
 **Request Body** (multipart/form-data):
-
 - `id_front` (file, required): Front of ID document (JPEG, JPG, PNG, PDF)
 - `id_back` (file, required): Back of ID document (JPEG, JPG, PNG, PDF)
 
 **Validation Rules**:
-
 - `id_front`: required, file, mimes:jpeg,jpg,png,pdf, max:5120 (5MB)
 - `id_back`: required, file, mimes:jpeg,jpg,png,pdf, max:5120 (5MB)
 
 **Response** (201 Created):
-
 ```json
 {
   "message": "Verification documents submitted successfully",
@@ -860,7 +815,6 @@ Content-Type: multipart/form-data
 **Error Responses**:
 
 *422 Unprocessable Entity* - Validation failed
-
 ```json
 {
   "message": "The given data was invalid.",
@@ -886,13 +840,11 @@ Check the status of the user's verification request.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 ```
 
 **Response** (200 OK):
-
 ```json
 {
   "data": {
@@ -905,13 +857,11 @@ Authorization: Bearer {token}
 ```
 
 **Possible Status Values**:
-
 - `pending`: Documents are under review
 - `approved`: User is verified
 - `rejected`: Verification failed
 
 **Response** (200 OK) - Rejected:
-
 ```json
 {
   "data": {
@@ -924,7 +874,6 @@ Authorization: Bearer {token}
 ```
 
 **Response** (404 Not Found) - No verification submitted:
-
 ```json
 {
   "message": "No verification request found."
@@ -944,14 +893,12 @@ Create a new product listing. **Requires verified user**.
 **Authentication**: Required (Verified users only)
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 ```
 
 **Request Body** (multipart/form-data):
-
 - `category_id` (integer, required): Category ID
 - `title` (string, required): Product title
 - `description` (string, required): Product description
@@ -962,7 +909,6 @@ Content-Type: multipart/form-data
 - `images` (array, optional): Additional product images (max 5 images, each max 2MB)
 
 **Validation Rules**:
-
 - `category_id`: required, exists:categories,id
 - `title`: required, string, max:255
 - `description`: required, string
@@ -974,7 +920,6 @@ Content-Type: multipart/form-data
 - `images.*`: image, mimes:jpeg,jpg,png, max:2048
 
 **Response** (201 Created):
-
 ```json
 {
   "message": "Product created successfully",
@@ -1003,7 +948,6 @@ Content-Type: multipart/form-data
 **Error Responses**:
 
 *403 Forbidden* - User not verified
-
 ```json
 {
   "message": "Your account must be verified to perform this action."
@@ -1011,7 +955,6 @@ Content-Type: multipart/form-data
 ```
 
 *422 Unprocessable Entity* - Validation failed
-
 ```json
 {
   "message": "The given data was invalid.",
@@ -1040,18 +983,15 @@ Update an existing product. **Only product owner can update**.
 **Authentication**: Required (Product owner only)
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 Content-Type: application/json
 ```
 
 **Path Parameters**:
-
 - `id` (integer, required): Product ID
 
 **Request Body**:
-
 ```json
 {
   "title": "Updated Camera Title",
@@ -1061,7 +1001,6 @@ Content-Type: application/json
 ```
 
 **Validation Rules**:
-
 - `category_id`: sometimes, exists:categories,id
 - `title`: sometimes, string, max:255
 - `description`: sometimes, string
@@ -1071,7 +1010,6 @@ Content-Type: application/json
 - `is_available`: boolean
 
 **Response** (200 OK):
-
 ```json
 {
   "message": "Product updated successfully",
@@ -1091,7 +1029,6 @@ Content-Type: application/json
 **Error Responses**:
 
 *403 Forbidden* - Not product owner
-
 ```json
 {
   "message": "This action is unauthorized."
@@ -1099,7 +1036,6 @@ Content-Type: application/json
 ```
 
 *404 Not Found* - Product doesn't exist
-
 ```json
 {
   "message": "Resource not found."
@@ -1117,17 +1053,14 @@ Delete a product listing. **Only product owner can delete**.
 **Authentication**: Required (Product owner only)
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 ```
 
 **Path Parameters**:
-
 - `id` (integer, required): Product ID
 
 **Response** (204 No Content):
-
 ```
 No response body
 ```
@@ -1135,7 +1068,6 @@ No response body
 **Error Responses**:
 
 *403 Forbidden* - Not product owner
-
 ```json
 {
   "message": "This action is unauthorized."
@@ -1143,7 +1075,6 @@ No response body
 ```
 
 *404 Not Found* - Product doesn't exist
-
 ```json
 {
   "message": "Resource not found."
@@ -1161,13 +1092,11 @@ Retrieve all products belonging to the authenticated user.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 ```
 
 **Response** (200 OK):
-
 ```json
 {
   "data": [
@@ -1203,14 +1132,12 @@ Request to rent a product for specific dates.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 Content-Type: application/json
 ```
 
 **Request Body**:
-
 ```json
 {
   "product_id": 25,
@@ -1221,14 +1148,12 @@ Content-Type: application/json
 ```
 
 **Validation Rules**:
-
 - `product_id`: required, exists:products,id
 - `start_date`: required, date, after_or_equal:today
 - `end_date`: required, date, after:start_date
 - `notes`: nullable, string, max:500
 
 **Response** (201 Created):
-
 ```json
 {
   "message": "Rental request created successfully",
@@ -1262,7 +1187,6 @@ Content-Type: application/json
 **Error Responses**:
 
 *400 Bad Request* - Product not available
-
 ```json
 {
   "message": "Product is not available for rent."
@@ -1270,7 +1194,6 @@ Content-Type: application/json
 ```
 
 *400 Bad Request* - Date conflict
-
 ```json
 {
   "message": "Product is not available for the selected dates."
@@ -1288,18 +1211,15 @@ Update the status of a rental request. **Only product owner can update**.
 **Authentication**: Required (Product owner only)
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 Content-Type: application/json
 ```
 
 **Path Parameters**:
-
 - `id` (integer, required): Rental ID
 
 **Request Body**:
-
 ```json
 {
   "status": "approved",
@@ -1308,12 +1228,10 @@ Content-Type: application/json
 ```
 
 **Validation Rules**:
-
 - `status`: required, in:approved,active,completed,cancelled
 - `notes`: nullable, string, max:500
 
 **Possible Status Values**:
-
 - `pending`: Initial status
 - `approved`: Owner approved the rental
 - `active`: Rental is currently active
@@ -1321,7 +1239,6 @@ Content-Type: application/json
 - `cancelled`: Rental was cancelled
 
 **Response** (200 OK):
-
 ```json
 {
   "message": "Rental status updated successfully",
@@ -1352,7 +1269,6 @@ Content-Type: application/json
 **Error Responses**:
 
 *403 Forbidden* - Not product owner
-
 ```json
 {
   "message": "This action is unauthorized."
@@ -1370,13 +1286,11 @@ Retrieve all rental requests made by the authenticated user.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 ```
 
 **Response** (200 OK):
-
 ```json
 {
   "data": [
@@ -1413,17 +1327,14 @@ Retrieve all rental requests for a specific product.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 ```
 
 **Path Parameters**:
-
 - `productId` (integer, required): Product ID
 
 **Response** (200 OK):
-
 ```json
 {
   "data": [
@@ -1458,14 +1369,12 @@ Request to purchase a product.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 Content-Type: application/json
 ```
 
 **Request Body**:
-
 ```json
 {
   "product_id": 25,
@@ -1474,12 +1383,10 @@ Content-Type: application/json
 ```
 
 **Validation Rules**:
-
 - `product_id`: required, exists:products,id
 - `notes`: nullable, string, max:500
 
 **Response** (201 Created):
-
 ```json
 {
   "message": "Purchase request created successfully",
@@ -1511,7 +1418,6 @@ Content-Type: application/json
 **Error Responses**:
 
 *400 Bad Request* - Product not for sale
-
 ```json
 {
   "message": "Product is not available for purchase."
@@ -1519,7 +1425,6 @@ Content-Type: application/json
 ```
 
 *400 Bad Request* - Product not available
-
 ```json
 {
   "message": "Product is no longer available."
@@ -1527,7 +1432,6 @@ Content-Type: application/json
 ```
 
 *400 Bad Request* - Already sold
-
 ```json
 {
   "message": "Product has already been sold."
@@ -1545,17 +1449,14 @@ Mark a purchase as completed. **Only product owner can complete**.
 **Authentication**: Required (Product owner only)
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 ```
 
 **Path Parameters**:
-
 - `id` (integer, required): Purchase ID
 
 **Response** (200 OK):
-
 ```json
 {
   "message": "Purchase completed successfully",
@@ -1584,7 +1485,6 @@ Authorization: Bearer {token}
 **Error Responses**:
 
 *403 Forbidden* - Not product owner
-
 ```json
 {
   "message": "This action is unauthorized."
@@ -1602,17 +1502,14 @@ Cancel a purchase request. **Product owner or buyer can cancel**.
 **Authentication**: Required (Product owner or buyer)
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 ```
 
 **Path Parameters**:
-
 - `id` (integer, required): Purchase ID
 
 **Response** (200 OK):
-
 ```json
 {
   "message": "Purchase cancelled successfully",
@@ -1642,13 +1539,11 @@ Retrieve all purchase requests made by the authenticated user.
 **Authentication**: Required
 
 **Headers**:
-
 ```http
 Authorization: Bearer {token}
 ```
 
 **Response** (200 OK):
-
 ```json
 {
   "data": [
@@ -1754,12 +1649,10 @@ GET /products?page=2&per_page=20
 ### Supported File Types
 
 **Images**:
-
 - JPEG (.jpg, .jpeg)
 - PNG (.png)
 
 **Documents**:
-
 - PDF (.pdf)
 
 ### File Size Limits
@@ -1894,17 +1787,14 @@ fun loginUser(email: String, password: String) {
 ## Support & Contact
 
 ### API Documentation
-
 - **Postman Collection**: [POSTMAN_TESTING_GUIDE.md](./POSTMAN_TESTING_GUIDE.md)
 - **Project README**: [README.md](./README.md)
 
 ### Development Team
-
 - **API Version**: v1
 - **Last Updated**: December 3, 2025
 
 ### Reporting Issues
-
 - Check existing documentation first
 - Provide clear reproduction steps
 - Include request/response examples
