@@ -9,6 +9,12 @@ done
 
 echo "PostgreSQL is ready!"
 
+# Create storage link if it doesn't exist
+if [ ! -L public/storage ]; then
+    echo "Creating storage link..."
+    php artisan storage:link
+fi
+
 # Run migrations
 php artisan migrate --force
 

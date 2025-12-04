@@ -1,4 +1,21 @@
 services:
+  # Nginx Web Server (for static files)
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: rented_api_nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./storage/app/public:/var/www/html/storage/app/public:ro
+      - ./public:/var/www/html/public:ro
+    depends_on:
+      - app
+    networks:
+      - rented_network
+
   # Laravel Application with Octane
   app:
     build:
@@ -6,8 +23,8 @@ services:
       dockerfile: Dockerfile
     container_name: rented_api_app
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     volumes:
       - .:/var/www/html
       - ./storage:/var/www/html/storage
