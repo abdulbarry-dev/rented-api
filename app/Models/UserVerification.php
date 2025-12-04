@@ -17,9 +17,7 @@ class UserVerification extends Model
      */
     protected $fillable = [
         'user_id',
-        'id_front_path',
-        'id_back_path',
-        'document_type',
+        'verification_images',
         'status',
         'admin_notes',
         'submitted_at',
@@ -32,6 +30,7 @@ class UserVerification extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'verification_images' => 'array',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
     ];
@@ -42,5 +41,77 @@ class UserVerification extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get ID front image path.
+     */
+    public function getIdFrontPathAttribute(): ?string
+    {
+        return $this->verification_images['id_front'] ?? null;
+    }
+
+    /**
+     * Get ID back image path.
+     */
+    public function getIdBackPathAttribute(): ?string
+    {
+        return $this->verification_images['id_back'] ?? null;
+    }
+
+    /**
+     * Get selfie image path.
+     */
+    public function getSelfiePathAttribute(): ?string
+    {
+        return $this->verification_images['selfie'] ?? null;
+    }
+
+    /**
+     * Check if ID front image exists.
+     */
+    public function hasIdFront(): bool
+    {
+        return ! empty($this->id_front_path);
+    }
+
+    /**
+     * Check if ID back image exists.
+     */
+    public function hasIdBack(): bool
+    {
+        return ! empty($this->id_back_path);
+    }
+
+    /**
+     * Check if selfie image exists.
+     */
+    public function hasSelfie(): bool
+    {
+        return ! empty($this->selfie_path);
+    }
+
+    /**
+     * Check if verification is pending.
+     */
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    /**
+     * Check if verification is verified.
+     */
+    public function isVerified(): bool
+    {
+        return $this->status === 'verified';
+    }
+
+    /**
+     * Check if verification is rejected.
+     */
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
     }
 }

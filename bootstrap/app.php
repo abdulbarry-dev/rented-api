@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        $middleware->append(\App\Http\Middleware\SecureHeaders::class);
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureUserIsVerified::class,
         ]);

@@ -46,6 +46,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/verify', [VerificationController::class, 'upload']);
     Route::get('/verify/status', [VerificationController::class, 'status']);
 
+    // Secure verification image viewing (owner only, rate limited)
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::get('/verify/image/{imageType}', [VerificationController::class, 'viewImage']);
+    });
+
     // Phase 4 - Product Management CRUD (Verified Users Only)
     Route::middleware('verified')->group(function () {
         Route::post('/products', [ProductController::class, 'store']);

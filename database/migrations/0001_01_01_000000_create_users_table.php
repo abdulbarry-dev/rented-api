@@ -15,10 +15,16 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('avatar_path')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->enum('verification_status', ['unverified', 'pending', 'verified', 'rejected'])->default('unverified');
+            $table->timestamp('verified_at')->nullable();
+            $table->text('rejection_reason')->nullable();
             $table->rememberToken();
             $table->timestamps();
+            
+            $table->index('verification_status');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

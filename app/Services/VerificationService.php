@@ -4,11 +4,13 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\UserVerification;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 
 class VerificationService
 {
+    public function __construct(
+        private ImageOptimizationService $imageOptimizer
+    ) {}
+
     /**
      * Upload verification documents.
      */
@@ -29,16 +31,36 @@ class VerificationService
             }
         }
 
-        // Store files
-        $idFrontPath = $this->storeFile($data['id_front'], 'verifications');
-        $idBackPath = $this->storeFile($data['id_back'], 'verifications');
+        // Optimize and store images
+        $idFrontPath = $this->imageOptimizer->optimizeAndStore(
+            $data['id_front'],
+            'verifications/national-ids',
+            1920,
+            85
+        );
 
-        // Create verification record
+        $idBackPath = $this->imageOptimizer->optimizeAndStore(
+            $data['id_back'],
+            'verifications/national-ids',
+            1920,
+            85
+        );
+
+        $selfiePath = $this->imageOptimizer->optimizeAndStore(
+            $data['selfie'],
+            'verifications/selfies',
+            1920,
+            85
+        );
+
+        // Create verification record with JSON structure
         $verification = UserVerification::create([
             'user_id' => $user->id,
-            'id_front_path' => $idFrontPath,
-            'id_back_path' => $idBackPath,
-            'document_type' => $data['document_type'] ?? null,
+            'verification_images' => [
+                'id_front' => $idFrontPath,
+                'id_back' => $idBackPath,
+                'selfie' => $selfiePath,
+            ],
             'status' => 'pending',
             'submitted_at' => now(),
         ]);
@@ -60,6 +82,11 @@ class VerificationService
             'has_submitted_documents' => $verification !== null,
             'document_status' => $verification?->status,
             'submitted_at' => $verification?->submitted_at,
+            'has_images' => $verification ? [
+                'id_front' => $verification->hasIdFront(),
+                'id_back' => $verification->hasIdBack(),
+                'selfie' => $verification->hasSelfie(),
+            ] : null,
         ];
     }
 
@@ -103,19 +130,16 @@ class VerificationService
     }
 
     /**
-     * Store uploaded file.
-     */
-    private function storeFile(UploadedFile $file, string $directory): string
-    {
-        return $file->store($directory, 'private');
-    }
-
-    /**
-     * Delete stored files.
+     * Delete verification files.
      */
     public function deleteVerificationFiles(UserVerification $verification): void
     {
-        Storage::disk('private')->delete($verification->id_front_path);
-        Storage::disk('private')->delete($verification->id_back_path);
+        if ($verification->verification_images) {
+            $this->imageOptimizer->deleteMultiple([
+                $verification->id_front_path,
+                $verification->id_back_path,
+                $verification->selfie_path,
+            ]);
+        }
     }
 }

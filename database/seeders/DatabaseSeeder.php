@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         // Only seed if database is empty
         if (User::count() > 0) {
             $this->command->info('Database already seeded. Skipping...');
+
             return;
         }
 

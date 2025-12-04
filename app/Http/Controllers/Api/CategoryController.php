@@ -11,8 +11,7 @@ class CategoryController extends Controller
 {
     public function __construct(
         private CategoryService $service
-    ) {
-    }
+    ) {}
 
     /**
      * Display a listing of categories.
@@ -35,7 +34,7 @@ class CategoryController extends Controller
     {
         $category = $this->service->getCategoryById($id);
 
-        if (!$category) {
+        if (! $category) {
             return response()->json([
                 'message' => 'Category not found',
             ], 404);

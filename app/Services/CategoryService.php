@@ -9,8 +9,7 @@ class CategoryService
 {
     public function __construct(
         private CategoryRepository $repository
-    ) {
-    }
+    ) {}
 
     /**
      * Get all active categories.

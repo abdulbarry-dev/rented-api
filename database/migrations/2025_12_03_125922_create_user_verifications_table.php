@@ -14,9 +14,7 @@ return new class extends Migration
         Schema::create('user_verifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('id_front_path');
-            $table->string('id_back_path');
-            $table->string('document_type')->nullable(); // passport, nid, driver_license
+            $table->json('verification_images')->nullable();
             $table->enum('status', ['pending', 'verified', 'rejected'])->default('pending');
             $table->text('admin_notes')->nullable();
             $table->timestamp('submitted_at')->useCurrent();
