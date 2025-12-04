@@ -27,6 +27,10 @@ class User extends Authenticatable
         'avatar_path',
         'verification_status',
         'verified_at',
+        'google_id',
+        'provider',
+        'google_token',
+        'google_refresh_token',
     ];
 
     /**
@@ -103,5 +107,45 @@ class User extends Authenticatable
     public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class, 'buyer_id');
+    }
+
+    /**
+     * Get all reviews written by the user.
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Get all favourites by the user.
+     */
+    public function favourites(): HasMany
+    {
+        return $this->hasMany(Favourite::class);
+    }
+
+    /**
+     * Get all conversations where user is participant one.
+     */
+    public function conversationsAsUserOne(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'user_one_id');
+    }
+
+    /**
+     * Get all conversations where user is participant two.
+     */
+    public function conversationsAsUserTwo(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'user_two_id');
+    }
+
+    /**
+     * Get all messages sent by the user.
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
     }
 }

@@ -2254,6 +2254,1214 @@ Authorization: Bearer {token}
 
 ---
 
+### Google OAuth Endpoints
+
+#### Redirect to Google Authentication
+
+Initiate Google OAuth authentication flow.
+
+**Endpoint**: `GET /auth/google`
+
+**Authentication**: Not required
+
+**Response** (200 OK):
+
+```json
+{
+  "url": "https://accounts.google.com/o/oauth2/auth?client_id=..."
+}
+```
+
+**Description**: The client should redirect the user to the returned URL for Google authentication.
+
+---
+
+#### Handle Google OAuth Callback
+
+Process Google OAuth callback and authenticate user.
+
+**Endpoint**: `GET /auth/google/callback`
+
+**Authentication**: Not required
+
+**Query Parameters**: Automatically provided by Google
+
+**Response** (200 OK):
+
+```json
+{
+  "message": "Successfully authenticated with Google",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@gmail.com",
+    "avatar_url": "https://lh3.googleusercontent.com/...",
+    "verification_status": "unverified",
+    "google_id": "1234567890"
+  },
+  "token": "2|AbCdEfGhIjKlMnOpQrStUvWxYz"
+}
+```
+
+**Errors**:
+
+- **500 Internal Server Error**: OAuth authentication failed
+
+**Notes**:
+- Creates new user if email doesn't exist
+- Links Google account to existing user if email matches
+- Updates Google tokens for future use
+
+---
+
+### Password Reset Endpoints
+
+#### Request Password Reset
+
+Send password reset email to user.
+
+**Endpoint**: `POST /forgot-password`
+
+**Authentication**: Not required
+
+**Request Body**:
+
+```json
+{
+  "email": "john@example.com"
+}
+```
+
+**Validation Rules**:
+
+- `email`: required, valid email format, must exist in database
+
+**Response** (200 OK):
+
+```json
+{
+  "message": "Password reset link sent to your email"
+}
+```
+
+**Errors**:
+
+- **422 Unprocessable Entity**: Validation failed
+
+```json
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "email": ["The email field is required."]
+  }
+}
+```
+
+**Notes**:
+- Reset link expires after 60 minutes
+- Check spam folder if email not received
+
+---
+
+#### Reset Password
+
+Reset user password using token from email.
+
+**Endpoint**: `POST /reset-password`
+
+**Authentication**: Not required
+
+**Request Body**:
+
+```json
+{
+  "email": "john@example.com",
+  "token": "reset-token-from-email",
+  "password": "NewSecurePassword123!",
+  "password_confirmation": "NewSecurePassword123!"
+}
+```
+
+**Validation Rules**:
+
+- `email`: required, valid email format
+- `token`: required, valid reset token
+- `password`: required, min 8 characters, confirmed
+- `password_confirmation`: required, must match password
+
+**Response** (200 OK):
+
+```json
+{
+  "message": "Password has been reset successfully"
+}
+```
+
+**Errors**:
+
+- **422 Unprocessable Entity**: Invalid token or validation failed
+
+```json
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "email": ["We can't find a user with that email address."],
+    "token": ["This password reset token is invalid."]
+  }
+}
+```
+
+---
+
+### Reviews Endpoints
+
+#### Get Product Reviews
+
+Retrieve all reviews for a specific product.
+
+**Endpoint**: `GET /products/{productId}/reviews`
+
+**Authentication**: Not required
+
+**Response** (200 OK):
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "rating": 5,
+      "comment": "Excellent product! Highly recommend.",
+      "user": {
+        "id": 2,
+        "name": "Jane Doe",
+        "avatar_url": "http://localhost:8000/storage/avatars/xyz789.jpg"
+      },
+      "created_at": "2025-12-04T10:30:00.000000Z"
+    }
+  ]
+}
+```
+
+---
+
+#### Get Product Rating Statistics
+
+Get average rating and review count for a product.
+
+**Endpoint**: `GET /products/{productId}/rating`
+
+**Authentication**: Not required
+
+**Response** (200 OK):
+
+```json
+{
+  "average_rating": 4.5,
+  "review_count": 42
+}
+```
+
+**Notes**:
+- Returns 0 for both values if no reviews exist
+- Rating rounded to 1 decimal place
+
+---
+
+#### Get User's Reviews
+
+Retrieve all reviews written by authenticated user.
+
+**Endpoint**: `GET /user/reviews`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "product": {
+        "id": 5,
+        "title": "Professional Camera",
+        "thumbnail_url": "http://localhost:8000/storage/products/thumbnails/abc123.jpg"
+      },
+      "rating": 5,
+      "comment": "Great product, exactly as described!",
+      "created_at": "2025-12-04T10:30:00.000000Z",
+      "updated_at": "2025-12-04T10:30:00.000000Z"
+    }
+  ]
+}
+```
+
+---
+
+#### Create Review
+
+Create a new review for a product.
+
+**Endpoint**: `POST /reviews`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Request Body**:
+
+```json
+{
+  "product_id": 5,
+  "rating": 5,
+  "comment": "Excellent product! Highly recommend."
+}
+```
+
+**Validation Rules**:
+
+- `product_id`: required, must exist
+- `rating`: required, integer between 1 and 5
+- `comment`: optional, string, max 1000 characters
+
+**Response** (201 Created):
+
+```json
+{
+  "data": {
+    "id": 1,
+    "rating": 5,
+    "comment": "Excellent product! Highly recommend.",
+    "user": {
+      "id": 1,
+      "name": "John Doe"
+    },
+    "product": {
+      "id": 5,
+      "title": "Professional Camera"
+    },
+    "created_at": "2025-12-04T10:30:00.000000Z"
+  }
+}
+```
+
+**Errors**:
+
+- **422 Unprocessable Entity**: Validation failed or duplicate review
+
+```json
+{
+  "message": "You have already reviewed this product."
+}
+```
+
+**Notes**:
+- Users can only submit one review per product
+- Cannot review own products
+
+---
+
+#### Update Review
+
+Update an existing review.
+
+**Endpoint**: `PUT /reviews/{id}`
+
+**Authentication**: Required (Owner only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Request Body**:
+
+```json
+{
+  "rating": 4,
+  "comment": "Updated review comment"
+}
+```
+
+**Validation Rules**:
+
+- `rating`: optional, integer between 1 and 5
+- `comment`: optional, string, max 1000 characters
+
+**Response** (200 OK):
+
+```json
+{
+  "data": {
+    "id": 1,
+    "rating": 4,
+    "comment": "Updated review comment",
+    "updated_at": "2025-12-04T11:00:00.000000Z"
+  }
+}
+```
+
+**Errors**:
+
+- **403 Forbidden**: Not the review owner
+- **404 Not Found**: Review doesn't exist
+
+---
+
+#### Delete Review
+
+Delete a review.
+
+**Endpoint**: `DELETE /reviews/{id}`
+
+**Authentication**: Required (Owner only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (204 No Content)
+
+**Errors**:
+
+- **403 Forbidden**: Not the review owner
+- **404 Not Found**: Review doesn't exist
+
+---
+
+### Favourites Endpoints
+
+#### Get User's Favourites
+
+Retrieve all products favourited by authenticated user.
+
+**Endpoint**: `GET /favourites`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "product": {
+        "id": 5,
+        "title": "Professional Camera",
+        "thumbnail_url": "http://localhost:8000/storage/products/thumbnails/abc123.jpg",
+        "price_per_day": "50.00",
+        "location_city": "New York",
+        "location_state": "NY"
+      },
+      "created_at": "2025-12-04T10:00:00.000000Z"
+    }
+  ]
+}
+```
+
+---
+
+#### Toggle Favourite
+
+Add or remove a product from favourites.
+
+**Endpoint**: `POST /favourites/toggle`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Request Body**:
+
+```json
+{
+  "product_id": 5
+}
+```
+
+**Validation Rules**:
+
+- `product_id`: required, must exist
+
+**Response** (200 OK) - Added:
+
+```json
+{
+  "favourited": true,
+  "message": "Product added to favourites"
+}
+```
+
+**Response** (200 OK) - Removed:
+
+```json
+{
+  "favourited": false,
+  "message": "Product removed from favourites"
+}
+```
+
+**Errors**:
+
+- **422 Unprocessable Entity**: Invalid product ID
+
+---
+
+#### Check if Product is Favourited
+
+Check if a product is in user's favourites.
+
+**Endpoint**: `GET /favourites/check/{productId}`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "favourited": true
+}
+```
+
+---
+
+#### Remove from Favourites
+
+Remove a product from favourites.
+
+**Endpoint**: `DELETE /favourites/{productId}`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (204 No Content)
+
+**Errors**:
+
+- **404 Not Found**: Product not in favourites
+
+---
+
+### Conversations & Messages Endpoints
+
+#### Get User's Conversations
+
+Retrieve all conversations for authenticated user.
+
+**Endpoint**: `GET /conversations`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "other_user": {
+        "id": 2,
+        "name": "Jane Doe",
+        "avatar_url": "http://localhost:8000/storage/avatars/xyz789.jpg"
+      },
+      "product": {
+        "id": 5,
+        "title": "Professional Camera",
+        "thumbnail_url": "http://localhost:8000/storage/products/thumbnails/abc123.jpg"
+      },
+      "last_message": {
+        "content": "Is this still available?",
+        "sender_id": 2,
+        "created_at": "2025-12-05T10:30:00.000000Z"
+      },
+      "last_message_at": "2025-12-05T10:30:00.000000Z"
+    }
+  ]
+}
+```
+
+**Notes**:
+- Ordered by most recent message first
+- Shows unread indicator if messages exist
+
+---
+
+#### Get Conversation by ID
+
+Get details of a specific conversation.
+
+**Endpoint**: `GET /conversations/{id}`
+
+**Authentication**: Required (Participant only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "data": {
+    "id": 1,
+    "other_user": {
+      "id": 2,
+      "name": "Jane Doe",
+      "avatar_url": "http://localhost:8000/storage/avatars/xyz789.jpg"
+    },
+    "product": {
+      "id": 5,
+      "title": "Professional Camera",
+      "thumbnail_url": "http://localhost:8000/storage/products/thumbnails/abc123.jpg"
+    },
+    "created_at": "2025-12-05T09:00:00.000000Z"
+  }
+}
+```
+
+**Errors**:
+
+- **403 Forbidden**: Not a participant in conversation
+
+---
+
+#### Get Conversation Messages
+
+Retrieve all messages in a conversation.
+
+**Endpoint**: `GET /conversations/{id}/messages`
+
+**Authentication**: Required (Participant only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "content": "Is this still available?",
+      "sender": {
+        "id": 2,
+        "name": "Jane Doe"
+      },
+      "is_read": true,
+      "read_at": "2025-12-05T10:35:00.000000Z",
+      "created_at": "2025-12-05T10:30:00.000000Z"
+    },
+    {
+      "id": 2,
+      "content": "Yes, it's available!",
+      "sender": {
+        "id": 1,
+        "name": "John Doe"
+      },
+      "is_read": false,
+      "read_at": null,
+      "created_at": "2025-12-05T10:32:00.000000Z"
+    }
+  ]
+}
+```
+
+**Notes**:
+- Messages ordered chronologically
+- Automatically marks messages as read when retrieved
+
+---
+
+#### Mark Conversation as Read
+
+Mark all messages in a conversation as read.
+
+**Endpoint**: `POST /conversations/{id}/read`
+
+**Authentication**: Required (Participant only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "message": "Conversation marked as read"
+}
+```
+
+---
+
+#### Get Unread Message Count
+
+Get total count of unread messages for user.
+
+**Endpoint**: `GET /conversations/unread/count`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "unread_count": 5
+}
+```
+
+**Notes**:
+- Useful for notification badges
+- Count updates in real-time
+
+---
+
+#### Send Message
+
+Send a message in a conversation or start a new conversation.
+
+**Endpoint**: `POST /messages`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Request Body** (New Conversation):
+
+```json
+{
+  "receiver_id": 2,
+  "product_id": 5,
+  "content": "Is this camera still available for rent?"
+}
+```
+
+**Request Body** (Existing Conversation):
+
+```json
+{
+  "conversation_id": 1,
+  "content": "When can I pick it up?"
+}
+```
+
+**Validation Rules**:
+
+- `conversation_id`: required without receiver_id, must exist
+- `receiver_id`: required without conversation_id, must exist, cannot be self
+- `product_id`: required with receiver_id, must exist
+- `content`: required, string, max 1000 characters
+
+**Response** (201 Created):
+
+```json
+{
+  "data": {
+    "id": 3,
+    "content": "When can I pick it up?",
+    "sender": {
+      "id": 1,
+      "name": "John Doe"
+    },
+    "conversation_id": 1,
+    "is_read": false,
+    "created_at": "2025-12-05T11:00:00.000000Z"
+  }
+}
+```
+
+**Errors**:
+
+- **422 Unprocessable Entity**: Validation failed
+- **403 Forbidden**: Attempting to message self
+
+**Notes**:
+- Creates conversation automatically if doesn't exist
+- Updates conversation's `last_message_at` timestamp
+
+---
+
+### Rental Availability Endpoints
+
+#### Get Product Availability Calendar
+
+Get blocked dates for a product within a date range.
+
+**Endpoint**: `GET /products/{productId}/availability`
+
+**Authentication**: Not required
+
+**Query Parameters**:
+
+- `start_date`: optional, format YYYY-MM-DD (defaults to today)
+- `end_date`: optional, format YYYY-MM-DD (defaults to 30 days from start)
+
+**Example**: `GET /products/5/availability?start_date=2025-12-01&end_date=2025-12-31`
+
+**Response** (200 OK):
+
+```json
+{
+  "product_id": 5,
+  "blocked_dates": [
+    {
+      "date": "2025-12-10",
+      "block_type": "booked",
+      "rental_id": 3
+    },
+    {
+      "date": "2025-12-11",
+      "block_type": "booked",
+      "rental_id": 3
+    },
+    {
+      "date": "2025-12-15",
+      "block_type": "maintenance",
+      "notes": "Camera servicing scheduled"
+    }
+  ]
+}
+```
+
+**Block Types**:
+- `booked`: Date reserved by rental
+- `maintenance`: Owner-blocked for maintenance/personal use
+
+---
+
+#### Check Date Availability
+
+Check if product is available for specific dates.
+
+**Endpoint**: `POST /products/{productId}/check-availability`
+
+**Authentication**: Not required
+
+**Request Body**:
+
+```json
+{
+  "start_date": "2025-12-20",
+  "end_date": "2025-12-25"
+}
+```
+
+**Validation Rules**:
+
+- `start_date`: required, date format YYYY-MM-DD, today or future
+- `end_date`: required, date format YYYY-MM-DD, after start_date
+
+**Response** (200 OK) - Available:
+
+```json
+{
+  "available": true,
+  "message": "Product is available for the selected dates"
+}
+```
+
+**Response** (200 OK) - Not Available:
+
+```json
+{
+  "available": false,
+  "message": "Product is not available for some dates in the selected range",
+  "blocked_dates": ["2025-12-22", "2025-12-23"]
+}
+```
+
+**Errors**:
+
+- **422 Unprocessable Entity**: Invalid dates
+
+---
+
+#### Block Dates for Maintenance
+
+Owner can block dates for maintenance or personal use.
+
+**Endpoint**: `POST /products/{productId}/block-dates`
+
+**Authentication**: Required (Product owner only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Request Body**:
+
+```json
+{
+  "dates": ["2025-12-15", "2025-12-16", "2025-12-17"],
+  "notes": "Camera maintenance and sensor cleaning"
+}
+```
+
+**Validation Rules**:
+
+- `dates`: required, array of dates in YYYY-MM-DD format
+- `notes`: optional, string, max 500 characters
+
+**Response** (201 Created):
+
+```json
+{
+  "message": "Dates blocked successfully",
+  "blocked_count": 3
+}
+```
+
+**Errors**:
+
+- **403 Forbidden**: Not the product owner
+- **422 Unprocessable Entity**: Invalid dates or dates already booked
+
+**Notes**:
+- Cannot block dates that are already booked by rentals
+- Can override existing maintenance blocks
+
+---
+
+### Disputes Endpoints
+
+#### Get User's Disputes
+
+Retrieve all disputes involving authenticated user.
+
+**Endpoint**: `GET /disputes`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "rental_id": 5,
+      "purchase_id": null,
+      "dispute_type": "damage",
+      "status": "open",
+      "description": "Item was returned with scratches on the lens",
+      "evidence": [
+        "http://localhost:8000/storage/disputes/image1.jpg",
+        "http://localhost:8000/storage/disputes/image2.jpg"
+      ],
+      "reporter": {
+        "id": 1,
+        "name": "John Doe"
+      },
+      "reported_user": {
+        "id": 2,
+        "name": "Jane Doe"
+      },
+      "resolution": null,
+      "created_at": "2025-12-05T09:00:00.000000Z",
+      "updated_at": "2025-12-05T09:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Notes**:
+- Shows disputes where user is either reporter or reported party
+- Ordered by most recent first
+
+---
+
+#### Get Dispute by ID
+
+Get details of a specific dispute.
+
+**Endpoint**: `GET /disputes/{id}`
+
+**Authentication**: Required (Involved parties only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "data": {
+    "id": 1,
+    "rental": {
+      "id": 5,
+      "product": {
+        "id": 10,
+        "title": "Professional Camera"
+      }
+    },
+    "dispute_type": "damage",
+    "status": "investigating",
+    "description": "Item was returned with scratches on the lens",
+    "evidence": [
+      "http://localhost:8000/storage/disputes/image1.jpg"
+    ],
+    "reporter": {
+      "id": 1,
+      "name": "John Doe"
+    },
+    "reported_user": {
+      "id": 2,
+      "name": "Jane Doe"
+    },
+    "resolution": "Under investigation by support team",
+    "created_at": "2025-12-05T09:00:00.000000Z",
+    "updated_at": "2025-12-05T10:00:00.000000Z"
+  }
+}
+```
+
+**Errors**:
+
+- **403 Forbidden**: Not involved in dispute
+
+---
+
+#### Create Dispute
+
+Create a new dispute for a rental or purchase.
+
+**Endpoint**: `POST /disputes`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Request Body**:
+
+```json
+{
+  "rental_id": 5,
+  "reported_against": 2,
+  "dispute_type": "damage",
+  "description": "The camera lens was scratched when returned. Photos attached as evidence.",
+  "evidence": [
+    "https://example.com/damage-photo1.jpg",
+    "https://example.com/damage-photo2.jpg"
+  ]
+}
+```
+
+**Validation Rules**:
+
+- `rental_id`: required without purchase_id, must exist
+- `purchase_id`: required without rental_id, must exist
+- `reported_against`: required, must be valid user ID
+- `dispute_type`: required, one of: `damage`, `late_return`, `not_as_described`, `payment`, `other`
+- `description`: required, string, max 2000 characters
+- `evidence`: optional, array of URLs or file paths
+
+**Dispute Types**:
+- `damage`: Property damage claims
+- `late_return`: Late return issues
+- `not_as_described`: Product mismatch or misrepresentation
+- `payment`: Payment-related problems
+- `other`: Other disputes
+
+**Response** (201 Created):
+
+```json
+{
+  "data": {
+    "id": 1,
+    "rental_id": 5,
+    "dispute_type": "damage",
+    "status": "open",
+    "description": "The camera lens was scratched when returned.",
+    "created_at": "2025-12-05T11:00:00.000000Z"
+  }
+}
+```
+
+**Errors**:
+
+- **422 Unprocessable Entity**: Validation failed
+- **403 Forbidden**: Not authorized to create dispute for this rental/purchase
+
+**Notes**:
+- Can only create dispute for rentals/purchases you're involved in
+- Evidence URLs should be accessible
+- System notifies both parties when dispute is created
+
+---
+
+#### Update Dispute Status
+
+Update the status of a dispute (admin/moderator action).
+
+**Endpoint**: `PUT /disputes/{id}/status`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Request Body**:
+
+```json
+{
+  "status": "investigating"
+}
+```
+
+**Validation Rules**:
+
+- `status`: required, one of: `investigating`, `resolved`, `closed`
+
+**Status Flow**:
+- `open` → `investigating` → `resolved` → `closed`
+
+**Response** (200 OK):
+
+```json
+{
+  "data": {
+    "id": 1,
+    "status": "investigating",
+    "updated_at": "2025-12-05T11:30:00.000000Z"
+  }
+}
+```
+
+**Errors**:
+
+- **403 Forbidden**: Not authorized to update status
+
+---
+
+#### Resolve Dispute
+
+Mark dispute as resolved with resolution details.
+
+**Endpoint**: `POST /disputes/{id}/resolve`
+
+**Authentication**: Required
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Request Body**:
+
+```json
+{
+  "resolution": "Refund of $100 issued to renter. Security deposit retained by owner for lens repair."
+}
+```
+
+**Validation Rules**:
+
+- `resolution`: required, string, max 2000 characters
+
+**Response** (200 OK):
+
+```json
+{
+  "data": {
+    "id": 1,
+    "status": "resolved",
+    "resolution": "Refund of $100 issued to renter. Security deposit retained by owner for lens repair.",
+    "updated_at": "2025-12-05T12:00:00.000000Z"
+  }
+}
+```
+
+**Errors**:
+
+- **403 Forbidden**: Not authorized to resolve dispute
+- **400 Bad Request**: Dispute already resolved
+
+**Notes**:
+- Automatically sets status to `resolved`
+- Sends notification to both parties
+- Resolution is permanent and cannot be edited
+
+---
+
 ## Status Codes
 
 The API uses standard HTTP status codes to indicate the success or failure of requests.
