@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
@@ -85,6 +87,43 @@ class AuthService
 
         // Update user
         $user->update(array_filter($data));
+
+        return $user->fresh();
+    }
+
+    /**
+     * Update user avatar.
+     */
+    public function updateAvatar(User $user, UploadedFile $avatar): User
+    {
+        // Delete old avatar if exists
+        if ($user->avatar_path) {
+            Storage::disk('public')->delete($user->avatar_path);
+        }
+
+        // Store new avatar
+        $path = $avatar->store('avatars', 'public');
+
+        // Update user avatar path
+        $user->update([
+            'avatar_path' => $path,
+        ]);
+
+        return $user->fresh();
+    }
+
+    /**
+     * Delete user avatar.
+     */
+    public function deleteAvatar(User $user): User
+    {
+        if ($user->avatar_path) {
+            Storage::disk('public')->delete($user->avatar_path);
+
+            $user->update([
+                'avatar_path' => null,
+            ]);
+        }
 
         return $user->fresh();
     }

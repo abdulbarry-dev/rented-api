@@ -39,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Phase 6 - User Profile Management
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/user/avatar', [AuthController::class, 'updateAvatar']);
+    Route::delete('/user/avatar', [AuthController::class, 'deleteAvatar']);
 
     // Phase 3 - User Verification
     Route::post('/verify', [VerificationController::class, 'upload']);

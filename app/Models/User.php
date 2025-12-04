@@ -24,6 +24,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar_path',
+        'verification_status',
+        'verified_at',
     ];
 
     /**
@@ -48,6 +51,18 @@ class User extends Authenticatable
             'password' => 'hashed',
             'verified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the full URL for the user's avatar.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (! $this->avatar_path) {
+            return null;
+        }
+
+        return asset('storage/'.$this->avatar_path);
     }
 
     /**

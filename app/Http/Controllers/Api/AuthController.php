@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\UpdateAvatarRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
@@ -88,5 +89,34 @@ class AuthController extends Controller
                 'message' => $e->getMessage(),
             ], 400);
         }
+    }
+
+    /**
+     * Update user avatar.
+     */
+    public function updateAvatar(UpdateAvatarRequest $request): JsonResponse
+    {
+        $user = $this->authService->updateAvatar(
+            $request->user(),
+            $request->file('avatar')
+        );
+
+        return response()->json([
+            'message' => 'Avatar updated successfully',
+            'data' => new UserResource($user),
+        ]);
+    }
+
+    /**
+     * Delete user avatar.
+     */
+    public function deleteAvatar(Request $request): JsonResponse
+    {
+        $user = $this->authService->deleteAvatar($request->user());
+
+        return response()->json([
+            'message' => 'Avatar deleted successfully',
+            'data' => new UserResource($user),
+        ]);
     }
 }
