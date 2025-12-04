@@ -73,4 +73,30 @@ class Product extends Model
     {
         return $this->hasMany(Purchase::class);
     }
+
+    /**
+     * Get the full URL for the thumbnail.
+     */
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if (! $this->thumbnail) {
+            return null;
+        }
+
+        return asset('storage/'.$this->thumbnail);
+    }
+
+    /**
+     * Get full URLs for all product images.
+     */
+    public function getImageUrlsAttribute(): array
+    {
+        if (! $this->images || ! is_array($this->images)) {
+            return [];
+        }
+
+        return array_map(function ($imagePath) {
+            return asset('storage/'.$imagePath);
+        }, $this->images);
+    }
 }
