@@ -18,7 +18,6 @@ RUN apt-get update && apt-get install -y \
     libpq5 \
     postgresql-client \
     libbrotli-dev \
-    supervisor \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -59,15 +58,12 @@ RUN chown -R www-data:www-data /var/www/html \
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Generate application key (if not set)
-RUN php artisan key:generate --force
-
-# Optimize Laravel
-RUN php artisan config:cache \
-    && php artisan route:cache
+# Copy and set up entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port for Octane
 EXPOSE 8000
 
-# Start Laravel Octane with Swoole
-CMD ["php", "artisan", "octane:start", "--server=swoole", "--host=0.0.0.0", "--port=8000"]
+# Use entrypoint script to initialize the application
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

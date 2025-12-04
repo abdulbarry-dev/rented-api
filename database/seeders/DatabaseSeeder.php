@@ -15,6 +15,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Only seed if database is empty
+        if (User::count() > 0) {
+            $this->command->info('Database already seeded. Skipping...');
+            return;
+        }
+
         // Create test users first
         User::factory(10)->create();
 
