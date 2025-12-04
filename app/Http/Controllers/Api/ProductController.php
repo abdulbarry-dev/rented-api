@@ -53,6 +53,9 @@ class ProductController extends Controller
             ], 404);
         }
 
+        // Load relationships for public viewing
+        $product->load(['category', 'user']);
+
         return response()->json([
             'data' => new ProductResource($product),
         ]);

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->text('rejection_reason')->nullable();
             $table->rememberToken();
             $table->timestamps();
-            
+
             $table->index('verification_status');
         });
 

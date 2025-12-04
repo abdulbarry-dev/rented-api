@@ -25,6 +25,7 @@ class ProductResource extends JsonResource
             'thumbnail_url' => $this->thumbnail_url,
             'image_urls' => $this->image_urls,
             'category' => new CategoryResource($this->whenLoaded('category')),
+            'owner' => new UserResource($this->whenLoaded('user')),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

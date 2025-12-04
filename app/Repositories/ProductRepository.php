@@ -11,7 +11,7 @@ class ProductRepository
 {
     /**
      * Get all products with pagination.
-     * Eager loads category relationship for efficiency.
+     * Eager loads category and user relationships for efficiency.
      */
     public function getAllPaginated(int $perPage = 15): LengthAwarePaginator
     {
@@ -19,7 +19,7 @@ class ProductRepository
         $cacheKey = "products.paginated.page.{$page}.per_page.{$perPage}";
 
         return Cache::remember($cacheKey, 600, function () use ($perPage) {
-            return Product::with('category')
+            return Product::with(['category', 'user'])
                 ->where('is_available', true)
                 ->latest()
                 ->paginate($perPage);
@@ -32,7 +32,7 @@ class ProductRepository
     public function getAll(): Collection
     {
         return Cache::remember('products.all', 600, function () {
-            return Product::with('category')
+            return Product::with(['category', 'user'])
                 ->where('is_available', true)
                 ->latest()
                 ->get();
