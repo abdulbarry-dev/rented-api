@@ -8,8 +8,11 @@ use App\Http\Resources\OfferResource;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Offer;
+use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Rental;
+use App\Models\RentalAvailability;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -50,7 +53,7 @@ class OfferController extends Controller
         $this->authorize('create', Offer::class);
 
         $user = auth()->user();
-        $product = \App\Models\Product::findOrFail($request->product_id);
+        $product = Product::findOrFail($request->product_id);
 
         $receiverId = $conversation->user_one_id === $user->id ? $conversation->user_two_id : $conversation->user_one_id;
 
@@ -107,8 +110,9 @@ class OfferController extends Controller
         }
 
         if ($offer->offer_type === 'rental') {
-            $blockedDates = \App\Models\RentalAvailability::where('product_id', $offer->product_id)
-                ->whereBetween('blocked_date', [$offer->start_date, $offer->end_date])->exists();
+            $blockedDates = RentalAvailability::where('product_id', $offer->product_id)
+                ->whereBetween('blocked_date', [$offer->start_date, $offer->end_date])
+                ->exists();
 
             if ($blockedDates) {
                 return response()->json(['message' => 'Product is no longer available for the selected dates.'], 422);
@@ -129,9 +133,9 @@ class OfferController extends Controller
                 'notes' => 'Created from accepted offer #'.$offer->id,
             ]);
 
-            $dates = \Carbon\CarbonPeriod::create($offer->start_date, $offer->end_date);
+            $dates = CarbonPeriod::create($offer->start_date, $offer->end_date);
             foreach ($dates as $date) {
-                \App\Models\RentalAvailability::create([
+                RentalAvailability::create([
                     'product_id' => $offer->product_id,
                     'blocked_date' => $date,
                     'block_type' => 'booked',

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\RentalAvailability;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreOfferRequest extends FormRequest
@@ -98,7 +99,7 @@ class StoreOfferRequest extends FormRequest
      */
     protected function areDatesAvailable(): bool
     {
-        $blockedDates = \App\Models\RentalAvailability::where('product_id', $this->product_id)
+        $blockedDates = RentalAvailability::where('product_id', $this->product_id)
             ->whereBetween('blocked_date', [$this->start_date, $this->end_date])
             ->exists();
 

@@ -153,7 +153,7 @@ class Product extends Model
             if (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://')) {
                 return $imagePath;
             }
-            
+
             return asset('storage/'.$imagePath);
         }, $this->images);
     }

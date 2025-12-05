@@ -61,7 +61,7 @@ class ProductFactory extends Factory
             'is_available' => fake()->boolean(85),
             'verification_status' => fake()->randomElement(['pending', 'approved', 'approved', 'approved']), // 75% approved
             'verified_at' => fake()->boolean(75) ? fake()->dateTimeBetween('-30 days', 'now') : null,
-            'thumbnail' => 'https://images.unsplash.com/photo-' . fake()->randomElement([
+            'thumbnail' => 'https://images.unsplash.com/photo-'.fake()->randomElement([
                 '1505740420928-5e560c06d30e',
                 '1523275335684-37898b6baf30',
                 '1572635196237-14b3f281503f',
@@ -70,7 +70,7 @@ class ProductFactory extends Factory
                 '1517336714731-489689fd1ca8',
                 '1485955900006-10f4d324d411',
                 '1492144534655-ae79c964c9d7',
-            ]) . '?w=800',
+            ]).'?w=800',
             'images' => [
                 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800',
                 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800',
