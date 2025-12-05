@@ -13,18 +13,27 @@
 8. [API Endpoints](#api-endpoints)
    - [Health Check](#health-check)
    - [Authentication](#authentication-endpoints)
+   - [Google OAuth](#google-oauth-endpoints)
+   - [Password Reset](#password-reset-endpoints)
    - [User Profile](#user-profile-endpoints)
    - [Avatar Management](#avatar-management-endpoints)
+   - [User Verification](#user-verification-endpoints)
    - [Categories](#categories-endpoints)
    - [Products](#products-endpoints)
-   - [User Verification](#user-verification-endpoints)
    - [Product Management](#product-management-endpoints)
+   - [Reviews](#reviews-endpoints)
+   - [Favourites](#favourites-endpoints)
+   - [Conversations & Messages](#conversations--messages-endpoints)
+   - [Rental Availability](#rental-availability-endpoints)
    - [Rentals](#rentals-endpoints)
    - [Purchases](#purchases-endpoints)
+   - [Disputes](#disputes-endpoints)
+   - [Product Verification (Admin)](#product-verification-endpoints-adminmoderator)
 9. [Status Codes](#status-codes)
 10. [Pagination](#pagination)
 11. [File Uploads](#file-uploads)
 12. [Best Practices](#best-practices)
+13. [Database Schema](#database-schema)
 
 ---
 
@@ -5773,6 +5782,331 @@ fun uploadAvatar(imageFile: File, token: String) {
 
 ---
 
+## Database Schema
+
+### Overview
+
+The Rented Marketplace API uses a relational database with 12 core models and their relationships.
+
+### Models & Tables
+
+#### 1. **User** (`users`)
+Stores user account information and authentication data.
+
+**Fields:**
+- `id` - Primary key
+- `name` - User's full name
+- `email` - Unique email address
+- `email_verified_at` - Email verification timestamp
+- `password` - Hashed password
+- `avatar` - Avatar image path (nullable)
+- `verification_status` - Enum: unverified, pending, verified, rejected
+- `google_id` - Google OAuth ID (nullable)
+- `provider` - OAuth provider name (nullable)
+- `google_token` - Google access token (nullable)
+- `google_refresh_token` - Google refresh token (nullable)
+- `remember_token` - Session token
+- `created_at`, `updated_at`
+
+**Relationships:**
+- Has many: products, rentals (as renter), purchases, reviews, favourites, conversations, messages, user_verification
+- Has one: verification
+
+---
+
+#### 2. **Category** (`categories`)
+Product categories for organization.
+
+**Fields:**
+- `id` - Primary key
+- `name` - Category name
+- `slug` - URL-friendly slug
+- `description` - Category description (nullable)
+- `created_at`, `updated_at`
+
+**Relationships:**
+- Has many: products
+
+---
+
+#### 3. **Product** (`products`)
+Product listings for rent or sale.
+
+**Fields:**
+- `id` - Primary key
+- `user_id` - Foreign key to users
+- `category_id` - Foreign key to categories
+- `title` - Product title
+- `description` - Product description
+- `price_per_day` - Daily rental price
+- `price_per_week` - Weekly rental price (nullable)
+- `price_per_month` - Monthly rental price (nullable)
+- `is_for_sale` - Boolean
+- `sale_price` - Sale price (nullable)
+- `is_available` - Boolean
+- `verification_status` - Enum: pending, approved, rejected
+- `rejection_reason` - Admin rejection reason (nullable)
+- `verified_at` - Verification timestamp (nullable)
+- `thumbnail` - Thumbnail image path (nullable)
+- `images` - JSON array of image paths
+- `location_address` - Street address (nullable)
+- `location_city` - City (nullable)
+- `location_state` - State/Province (nullable)
+- `location_country` - Country (nullable)
+- `location_zip` - Postal code (nullable)
+- `location_latitude` - Decimal (nullable)
+- `location_longitude` - Decimal (nullable)
+- `delivery_available` - Boolean
+- `delivery_fee` - Delivery charge (nullable)
+- `delivery_radius_km` - Delivery radius in km (nullable)
+- `pickup_available` - Boolean
+- `product_condition` - Enum: new, like_new, good, fair, worn
+- `security_deposit` - Required deposit amount (nullable)
+- `min_rental_days` - Minimum rental period (nullable)
+- `max_rental_days` - Maximum rental period (nullable)
+- `created_at`, `updated_at`
+
+**Relationships:**
+- Belongs to: user, category
+- Has many: rentals, purchases, reviews, favourites, rental_availability, conversations
+
+---
+
+#### 4. **UserVerification** (`user_verifications`)
+ID document verification for users.
+
+**Fields:**
+- `id` - Primary key
+- `user_id` - Foreign key to users (unique)
+- `id_front` - Front ID image path
+- `id_back` - Back ID image path
+- `created_at`, `updated_at`
+
+**Relationships:**
+- Belongs to: user
+
+---
+
+#### 5. **Rental** (`rentals`)
+Rental transactions and bookings.
+
+**Fields:**
+- `id` - Primary key
+- `product_id` - Foreign key to products
+- `user_id` - Foreign key to users (renter)
+- `start_date` - Rental start date
+- `end_date` - Rental end date
+- `total_price` - Total rental cost
+- `status` - Enum: pending, confirmed, completed, cancelled
+- `delivery_required` - Boolean
+- `notes` - Rental notes (nullable)
+- `created_at`, `updated_at`
+
+**Relationships:**
+- Belongs to: product, user
+- Has many: disputes, rental_availability
+
+---
+
+#### 6. **Purchase** (`purchases`)
+Purchase transactions for items for sale.
+
+**Fields:**
+- `id` - Primary key
+- `product_id` - Foreign key to products
+- `user_id` - Foreign key to users (buyer)
+- `purchase_price` - Final purchase price
+- `status` - Enum: pending, completed, cancelled
+- `delivery_required` - Boolean
+- `notes` - Purchase notes (nullable)
+- `created_at`, `updated_at`
+
+**Relationships:**
+- Belongs to: product, user
+- Has many: disputes
+
+---
+
+#### 7. **Review** (`reviews`)
+Product reviews and ratings.
+
+**Fields:**
+- `id` - Primary key
+- `user_id` - Foreign key to users
+- `product_id` - Foreign key to products
+- `rating` - Integer (1-5)
+- `comment` - Review text (nullable)
+- `created_at`, `updated_at`
+
+**Unique Constraint:** (user_id, product_id)
+
+**Relationships:**
+- Belongs to: user, product
+
+---
+
+#### 8. **Favourite** (`favourites`)
+User's favourited/wishlist products.
+
+**Fields:**
+- `id` - Primary key
+- `user_id` - Foreign key to users
+- `product_id` - Foreign key to products
+- `created_at`, `updated_at`
+
+**Unique Constraint:** (user_id, product_id)
+
+**Relationships:**
+- Belongs to: user, product
+
+---
+
+#### 9. **Conversation** (`conversations`)
+Chat conversations between users about products.
+
+**Fields:**
+- `id` - Primary key
+- `user_one_id` - Foreign key to users
+- `user_two_id` - Foreign key to users
+- `product_id` - Foreign key to products
+- `last_message_at` - Last message timestamp (nullable)
+- `created_at`, `updated_at`
+
+**Relationships:**
+- Belongs to: userOne, userTwo, product
+- Has many: messages
+
+---
+
+#### 10. **Message** (`messages`)
+Individual messages within conversations.
+
+**Fields:**
+- `id` - Primary key
+- `conversation_id` - Foreign key to conversations
+- `sender_id` - Foreign key to users
+- `content` - Message text
+- `is_read` - Boolean
+- `read_at` - Read timestamp (nullable)
+- `created_at`, `updated_at`
+
+**Relationships:**
+- Belongs to: conversation, sender (user)
+
+---
+
+#### 11. **RentalAvailability** (`rental_availability`)
+Tracks product availability and blocked dates.
+
+**Fields:**
+- `id` - Primary key
+- `product_id` - Foreign key to products
+- `blocked_date` - Date blocked
+- `block_type` - Enum: booked, maintenance
+- `rental_id` - Foreign key to rentals (nullable)
+- `notes` - Blocking reason (nullable)
+- `created_at`, `updated_at`
+
+**Unique Constraint:** (product_id, blocked_date)
+
+**Relationships:**
+- Belongs to: product, rental (optional)
+
+---
+
+#### 12. **Dispute** (`disputes`)
+Issue reporting for rentals and purchases.
+
+**Fields:**
+- `id` - Primary key
+- `rental_id` - Foreign key to rentals (nullable)
+- `purchase_id` - Foreign key to purchases (nullable)
+- `reported_by` - Foreign key to users
+- `reported_against` - Foreign key to users
+- `dispute_type` - Enum: damage, late_return, not_as_described, payment, other
+- `status` - Enum: open, investigating, resolved, closed
+- `description` - Dispute description
+- `evidence` - JSON array of evidence URLs (nullable)
+- `resolution` - Resolution details (nullable)
+- `created_at`, `updated_at`
+
+**Relationships:**
+- Belongs to: rental, purchase, reporter (user), reportedUser (user)
+
+---
+
+### Database Diagram
+
+```
+users
+  ├─ has many products
+  ├─ has many rentals (as renter)
+  ├─ has many purchases
+  ├─ has many reviews
+  ├─ has many favourites
+  ├─ has many conversations (as user_one or user_two)
+  ├─ has many messages (as sender)
+  ├─ has many disputes (as reporter or reported_against)
+  └─ has one verification
+
+categories
+  └─ has many products
+
+products
+  ├─ belongs to user (owner)
+  ├─ belongs to category
+  ├─ has many rentals
+  ├─ has many purchases
+  ├─ has many reviews
+  ├─ has many favourites
+  ├─ has many rental_availability
+  └─ has many conversations
+
+rentals
+  ├─ belongs to product
+  ├─ belongs to user (renter)
+  ├─ has many rental_availability
+  └─ has many disputes
+
+purchases
+  ├─ belongs to product
+  ├─ belongs to user (buyer)
+  └─ has many disputes
+
+reviews
+  ├─ belongs to user
+  └─ belongs to product
+
+favourites
+  ├─ belongs to user
+  └─ belongs to product
+
+conversations
+  ├─ belongs to user_one
+  ├─ belongs to user_two
+  ├─ belongs to product
+  └─ has many messages
+
+messages
+  ├─ belongs to conversation
+  └─ belongs to sender (user)
+
+rental_availability
+  ├─ belongs to product
+  └─ belongs to rental (optional)
+
+disputes
+  ├─ belongs to rental (optional)
+  ├─ belongs to purchase (optional)
+  ├─ belongs to reporter (user)
+  └─ belongs to reported_against (user)
+
+user_verifications
+  └─ belongs to user
+```
+
+---
+
 ## Support & Contact
 
 ### API Documentation
@@ -5796,7 +6130,7 @@ fun uploadAvatar(imageFile: File, token: String) {
 ### Development Team
 
 - **API Version**: v1
-- **Last Updated**: December 4, 2025
+- **Last Updated**: December 5, 2025
 
 ### Reporting Issues
 
