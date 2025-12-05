@@ -44,12 +44,16 @@ class ProductRepository
     /**
      * Find product by ID.
      * Eager loads category and user relationships.
+     * Only returns approved and available products for public access.
      */
     public function findById(int $id): ?Product
     {
         return Cache::remember("products.{$id}", 600, function () use ($id) {
             return Product::with(['category', 'user'])
-                ->find($id);
+                ->where('id', $id)
+                ->where('is_available', true)
+                ->where('verification_status', 'approved')
+                ->first();
         });
     }
 
@@ -90,12 +94,14 @@ class ProductRepository
 
     /**
      * Get products by category ID.
+     * Only returns approved and available products.
      */
     public function getByCategoryId(int $categoryId): Collection
     {
         return Product::with('category')
             ->where('category_id', $categoryId)
             ->where('is_available', true)
+            ->where('verification_status', 'approved')
             ->latest()
             ->get();
     }
