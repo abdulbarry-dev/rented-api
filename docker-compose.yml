@@ -138,7 +138,7 @@ services:
     networks:
       - rented_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      test: ["CMD-SHELL", "pgrep -f 'artisan reverb:start' > /dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
