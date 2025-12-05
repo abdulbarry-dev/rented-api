@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -66,7 +67,7 @@ class User extends Authenticatable
             return null;
         }
 
-        return asset('storage/'.$this->avatar_path);
+        return Storage::disk('public')->url($this->avatar_path);
     }
 
     /**
