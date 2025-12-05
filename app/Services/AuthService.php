@@ -5,11 +5,14 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
+    public function __construct(
+        private ImageUploadService $imageUploadService
+    ) {}
+
     /**
      * Register a new user.
      */
@@ -94,15 +97,15 @@ class AuthService
     /**
      * Update user avatar.
      */
-    public function updateAvatar(User $user, UploadedFile $avatar): User
+    public function updateAvatar(User $user, UploadedFile|string $avatar): User
     {
         // Delete old avatar if exists
         if ($user->avatar_path) {
-            Storage::disk('public')->delete($user->avatar_path);
+            $this->imageUploadService->delete($user->avatar_path);
         }
 
-        // Store new avatar
-        $path = $avatar->store('avatars', 'public');
+        // Store new avatar with optimization
+        $path = $this->imageUploadService->uploadAvatar($avatar);
 
         // Update user avatar path
         $user->update([
@@ -118,7 +121,7 @@ class AuthService
     public function deleteAvatar(User $user): User
     {
         if ($user->avatar_path) {
-            Storage::disk('public')->delete($user->avatar_path);
+            $this->imageUploadService->delete($user->avatar_path);
 
             $user->update([
                 'avatar_path' => null,

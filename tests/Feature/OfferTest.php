@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Conversation;
-use App\Models\Message;
 use App\Models\Offer;
 use App\Models\Product;
 use App\Models\Purchase;

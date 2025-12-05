@@ -46,6 +46,7 @@ php artisan octane:start
 
 - **[Authentication](./docs/api/AUTHENTICATION.md)** - Register, login, logout, OAuth, password reset
 - **[User Profile](./docs/api/USER_PROFILE.md)** - Profile management, avatar, verification
+- **[Image Upload](./docs/api/IMAGE_UPLOAD.md)** - Seamless image uploads with optimization
 - **[Categories](./docs/api/CATEGORIES.md)** - Product categories
 - **[Products](./docs/api/PRODUCTS.md)** - Product listings, CRUD operations
 - **[Reviews](./docs/api/REVIEWS.md)** - Product reviews and ratings

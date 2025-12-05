@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DisputeController;
 use App\Http\Controllers\Api\FavouriteController;
+use App\Http\Controllers\Api\ImageUploadController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\OfferController;
 use App\Http\Controllers\Api\PasswordResetController;
@@ -67,6 +68,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
     Route::post('/user/avatar', [AuthController::class, 'updateAvatar']);
     Route::delete('/user/avatar', [AuthController::class, 'deleteAvatar']);
+
+    // Image Upload Endpoints
+    Route::post('/upload/image', [ImageUploadController::class, 'uploadSingle']);
+    Route::post('/upload/images', [ImageUploadController::class, 'uploadMultiple']);
+    Route::post('/upload/avatar', [ImageUploadController::class, 'uploadAvatar']);
+    Route::delete('/upload/image', [ImageUploadController::class, 'delete']);
 
     // Phase 3 - User Verification
     Route::post('/verify', [VerificationController::class, 'upload']);

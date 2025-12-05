@@ -7,14 +7,13 @@ use App\Models\User;
 use App\Repositories\ProductRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class ProductService
 {
     public function __construct(
-        private ProductRepository $repository
+        private ProductRepository $repository,
+        private ImageUploadService $imageUploadService
     ) {}
 
     /**
@@ -56,16 +55,12 @@ class ProductService
     {
         // Handle thumbnail upload
         if (isset($data['thumbnail'])) {
-            $data['thumbnail'] = $this->uploadFile($data['thumbnail'], 'products/thumbnails');
+            $data['thumbnail'] = $this->imageUploadService->uploadProductThumbnail($data['thumbnail']);
         }
 
         // Handle multiple images upload
         if (isset($data['images']) && is_array($data['images'])) {
-            $imagePaths = [];
-            foreach ($data['images'] as $image) {
-                $imagePaths[] = $this->uploadFile($image, 'products/images');
-            }
-            $data['images'] = $imagePaths;
+            $data['images'] = $this->imageUploadService->uploadProductImages($data['images']);
         }
 
         // Add user_id
@@ -92,25 +87,19 @@ class ProductService
         if (isset($data['thumbnail'])) {
             // Delete old thumbnail
             if ($product->thumbnail) {
-                Storage::disk('public')->delete($product->thumbnail);
+                $this->imageUploadService->delete($product->thumbnail);
             }
-            $data['thumbnail'] = $this->uploadFile($data['thumbnail'], 'products/thumbnails');
+            $data['thumbnail'] = $this->imageUploadService->uploadProductThumbnail($data['thumbnail']);
         }
 
         // Handle multiple images upload
         if (isset($data['images']) && is_array($data['images'])) {
             // Delete old images
             if ($product->images && is_array($product->images)) {
-                foreach ($product->images as $oldImage) {
-                    Storage::disk('public')->delete($oldImage);
-                }
+                $this->imageUploadService->delete($product->images);
             }
 
-            $imagePaths = [];
-            foreach ($data['images'] as $image) {
-                $imagePaths[] = $this->uploadFile($image, 'products/images');
-            }
-            $data['images'] = $imagePaths;
+            $data['images'] = $this->imageUploadService->uploadProductImages($data['images']);
         }
 
         $this->repository->update($product, $data);
@@ -130,13 +119,11 @@ class ProductService
 
         // Delete associated files
         if ($product->thumbnail) {
-            Storage::disk('public')->delete($product->thumbnail);
+            $this->imageUploadService->delete($product->thumbnail);
         }
 
         if ($product->images && is_array($product->images)) {
-            foreach ($product->images as $image) {
-                Storage::disk('public')->delete($image);
-            }
+            $this->imageUploadService->delete($product->images);
         }
 
         $result = $this->repository->delete($product);
@@ -145,14 +132,6 @@ class ProductService
         $this->clearProductCaches($productId);
 
         return $result;
-    }
-
-    /**
-     * Upload file to storage.
-     */
-    private function uploadFile(UploadedFile $file, string $directory): string
-    {
-        return $file->store($directory, 'public');
     }
 
     /**
