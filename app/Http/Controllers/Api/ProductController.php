@@ -49,13 +49,22 @@ class ProductController extends Controller
         // Try to get approved product first
         $product = $this->service->getProductById($id);
 
-        // If not found and user is authenticated, check if they own the product
-        // (allows owners to see their products even if not approved or unavailable)
-        if (! $product && $request->user()) {
-            $product = Product::with(['category', 'user'])
-                ->where('id', $id)
-                ->where('user_id', $request->user()->id)
-                ->first();
+        // If not found, try to authenticate user from token (even on public route)
+        // This allows owners to see their products even if not approved or unavailable
+        if (! $product && $request->bearerToken()) {
+            try {
+                // Manually authenticate using Sanctum guard from the request
+                $user = auth('sanctum')->setRequest($request)->user();
+
+                if ($user) {
+                    $product = Product::with(['category', 'user'])
+                        ->where('id', $id)
+                        ->where('user_id', $user->id)
+                        ->first();
+                }
+            } catch (\Exception $e) {
+                // Token invalid or expired, continue as guest
+            }
         }
 
         if (! $product) {
