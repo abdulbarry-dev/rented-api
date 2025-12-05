@@ -12,22 +12,27 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $avatars = ['avatars/user_1.webp', 'avatars/user_2.jpeg', 'avatars/user_3.png'];
+        // Use laptop image for testing uploads
+        $avatar = 'avatars/laptop_test.jpg';
 
-        // Create main test user with password 'password'
+        // Create main test user with laptop avatar
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'avatar' => $avatars[0],
+            'avatar_path' => $avatar,
             'verification_status' => 'verified',
+            'verified_at' => now(),
         ]);
 
-        // Create additional users with avatars
-        User::factory(9)->create()->each(function ($user, $index) use ($avatars) {
-            $avatarIndex = $index % count($avatars);
-            $user->update(['avatar' => $avatars[$avatarIndex]]);
+        // Create additional test users with same avatar for consistency
+        User::factory(9)->create()->each(function ($user) use ($avatar) {
+            $user->update([
+                'avatar_path' => $avatar,
+                'verification_status' => 'verified',
+                'verified_at' => now(),
+            ]);
         });
 
-        $this->command->info('✅ Created 10 users (test@example.com / password)');
+        $this->command->info('✅ Created 10 verified users with laptop avatar (test@example.com / password)');
     }
 }

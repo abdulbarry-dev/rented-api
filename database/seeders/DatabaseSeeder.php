@@ -139,41 +139,44 @@ class DatabaseSeeder extends Seeder
             $userOne = $users->random();
             $userTwo = $users->where('id', '!=', $userOne->id)->random();
 
-            // Check if conversation already exists
-            $exists = \App\Models\Conversation::where('product_id', $product->id)
-                ->where(function ($query) use ($userOne, $userTwo) {
-                    $query->where(function ($q) use ($userOne, $userTwo) {
-                        $q->where('user_one_id', $userOne->id)
-                            ->where('user_two_id', $userTwo->id);
-                    })->orWhere(function ($q) use ($userOne, $userTwo) {
-                        $q->where('user_one_id', $userTwo->id)
-                            ->where('user_two_id', $userOne->id);
-                    });
-                })
-                ->exists();
+            // Check if conversation already exists between these two users (unique constraint on user_one_id, user_two_id)
+            $exists = \App\Models\Conversation::where(function ($query) use ($userOne, $userTwo) {
+                $query->where(function ($q) use ($userOne, $userTwo) {
+                    $q->where('user_one_id', $userOne->id)
+                        ->where('user_two_id', $userTwo->id);
+                })->orWhere(function ($q) use ($userOne, $userTwo) {
+                    $q->where('user_one_id', $userTwo->id)
+                        ->where('user_two_id', $userOne->id);
+                });
+            })->exists();
 
             if (! $exists) {
-                $conversation = \App\Models\Conversation::factory()->create([
-                    'user_one_id' => $userOne->id,
-                    'user_two_id' => $userTwo->id,
-                    'product_id' => $product->id,
-                ]);
-
-                // Create 2-5 messages per conversation
-                $messageCount = rand(2, 5);
-                foreach (range(1, $messageCount) as $j) {
-                    $senderId = $j % 2 === 0 ? $userOne->id : $userTwo->id;
-
-                    \App\Models\Message::factory()->create([
-                        'conversation_id' => $conversation->id,
-                        'sender_id' => $senderId,
+                try {
+                    $conversation = \App\Models\Conversation::factory()->create([
+                        'user_one_id' => $userOne->id,
+                        'user_two_id' => $userTwo->id,
+                        'product_id' => $product->id,
                     ]);
-                }
 
-                // Update last_message_at
-                $lastMessage = $conversation->messages()->latest()->first();
-                if ($lastMessage) {
-                    $conversation->update(['last_message_at' => $lastMessage->created_at]);
+                    // Create 2-5 messages per conversation
+                    $messageCount = rand(2, 5);
+                    foreach (range(1, $messageCount) as $j) {
+                        $senderId = $j % 2 === 0 ? $userOne->id : $userTwo->id;
+
+                        \App\Models\Message::factory()->create([
+                            'conversation_id' => $conversation->id,
+                            'sender_id' => $senderId,
+                        ]);
+                    }
+
+                    // Update last_message_at
+                    $lastMessage = $conversation->messages()->latest()->first();
+                    if ($lastMessage) {
+                        $conversation->update(['last_message_at' => $lastMessage->created_at]);
+                    }
+                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                    // Skip if unique constraint is violated (race condition)
+                    continue;
                 }
             }
         }
