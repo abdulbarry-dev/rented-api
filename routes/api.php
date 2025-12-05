@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DisputeController;
 use App\Http\Controllers\Api\FavouriteController;
 use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\OfferController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductVerificationController;
@@ -122,6 +123,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Send messages
     Route::post('/messages', [MessageController::class, 'store']);
+
+    // Offers (Custom Offers in Conversations)
+    Route::prefix('conversations/{conversation}')->group(function () {
+        Route::get('/offers', [OfferController::class, 'index']);
+        Route::post('/offers', [OfferController::class, 'store']);
+        Route::get('/offers/{offer}', [OfferController::class, 'show']);
+        Route::post('/offers/{offer}/accept', [OfferController::class, 'accept']);
+        Route::post('/offers/{offer}/reject', [OfferController::class, 'reject']);
+    });
 
     // Rental Availability Management (Owner Only)
     Route::post('/products/{productId}/block-dates', [RentalAvailabilityController::class, 'blockForMaintenance']);

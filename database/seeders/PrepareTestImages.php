@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class PrepareTestImages extends Seeder
 {
@@ -17,23 +17,24 @@ class PrepareTestImages extends Seeder
         // Source image path (user should place their image here)
         $sourceImage = storage_path('app/seed-images/laptop.jpg');
 
-        if (!File::exists($sourceImage)) {
-            $this->command->error('❌ Source image not found at: ' . $sourceImage);
+        if (! File::exists($sourceImage)) {
+            $this->command->error('❌ Source image not found at: '.$sourceImage);
             $this->command->info('📝 Please place your laptop image at: storage/app/seed-images/laptop.jpg');
             $this->command->info('   Supported formats: jpg, jpeg, png, webp');
+
             return;
         }
 
         // Ensure public disk directories exist
         $publicDisk = Storage::disk('public');
-        
+
         $directories = [
             'avatars',
             'products/images',
         ];
 
         foreach ($directories as $directory) {
-            if (!$publicDisk->exists($directory)) {
+            if (! $publicDisk->exists($directory)) {
                 $publicDisk->makeDirectory($directory);
                 $this->command->info("✅ Created directory: {$directory}");
             }

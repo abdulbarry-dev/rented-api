@@ -19,6 +19,7 @@ class Message extends Model
         'conversation_id',
         'sender_id',
         'content',
+        'offer_id',
         'is_read',
         'read_at',
     ];
@@ -47,5 +48,13 @@ class Message extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    /**
+     * Get the offer associated with this message.
+     */
+    public function offer(): BelongsTo
+    {
+        return $this->belongsTo(Offer::class);
     }
 }

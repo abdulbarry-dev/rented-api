@@ -65,6 +65,14 @@ class Conversation extends Model
     }
 
     /**
+     * Get all offers in the conversation.
+     */
+    public function offers(): HasMany
+    {
+        return $this->hasMany(Offer::class);
+    }
+
+    /**
      * Get the other user in the conversation.
      */
     public function getOtherUser(int $userId): User
