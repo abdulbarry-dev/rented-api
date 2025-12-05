@@ -131,6 +131,11 @@ class Product extends Model
             return null;
         }
 
+        // If it's already a full URL (http/https), return as is
+        if (str_starts_with($this->thumbnail, 'http://') || str_starts_with($this->thumbnail, 'https://')) {
+            return $this->thumbnail;
+        }
+
         return asset('storage/'.$this->thumbnail);
     }
 
@@ -144,6 +149,11 @@ class Product extends Model
         }
 
         return array_map(function ($imagePath) {
+            // If it's already a full URL (http/https), return as is
+            if (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://')) {
+                return $imagePath;
+            }
+            
             return asset('storage/'.$imagePath);
         }, $this->images);
     }
