@@ -15,7 +15,7 @@ class RentalAvailability extends Model
      *
      * @var string
      */
-    protected $table = 'rental_availability';
+    protected $table = 'rental_availabilities';
 
     /**
      * The attributes that are mass assignable.
