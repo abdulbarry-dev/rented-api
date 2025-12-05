@@ -28,6 +28,7 @@ class UpdateProfileRequest extends FormRequest
             'email' => "sometimes|email|max:255|unique:users,email,{$userId}",
             'current_password' => 'required_with:password|string',
             'password' => 'sometimes|string|min:8|confirmed',
+            'avatar_path' => 'sometimes|string|max:500',
         ];
     }
 
