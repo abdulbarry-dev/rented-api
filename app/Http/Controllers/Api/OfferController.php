@@ -13,11 +13,14 @@ use App\Models\Purchase;
 use App\Models\Rental;
 use App\Models\RentalAvailability;
 use Carbon\CarbonPeriod;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class OfferController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request, Conversation $conversation): JsonResponse
     {
         $this->authorize('viewAny', Offer::class);
