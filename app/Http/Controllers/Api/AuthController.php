@@ -119,4 +119,22 @@ class AuthController extends Controller
             'data' => new UserResource($user),
         ]);
     }
+
+    /**
+     * Delete user account.
+     */
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        try {
+            $this->authService->deleteAccount($request->user());
+
+            return response()->json([
+                'message' => 'Account deleted successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
 }

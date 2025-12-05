@@ -151,4 +151,24 @@ class AuthService
 
         return $user->fresh();
     }
+
+    /**
+     * Delete user account and all associated data.
+     * 
+     * Note: Database foreign key constraints with onDelete('cascade') will
+     * automatically handle deletion of related records (products, rentals, etc.)
+     */
+    public function deleteAccount(User $user): bool
+    {
+        // Delete user avatar if exists
+        if ($user->avatar_path) {
+            $this->imageUploadService->delete($user->avatar_path);
+        }
+
+        // Revoke all tokens before deletion
+        $user->tokens()->delete();
+
+        // Delete the user (cascade will handle related records)
+        return $user->delete();
+    }
 }
