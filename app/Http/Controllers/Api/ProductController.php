@@ -42,10 +42,21 @@ class ProductController extends Controller
     /**
      * Display the specified product.
      * Public endpoint - no authentication required.
+     * But allows product owners to see their own products even if not approved.
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        // Try to get approved product first
         $product = $this->service->getProductById($id);
+
+        // If not found and user is authenticated, check if they own the product
+        // (allows owners to see their products even if not approved or unavailable)
+        if (! $product && $request->user()) {
+            $product = Product::with(['category', 'user'])
+                ->where('id', $id)
+                ->where('user_id', $request->user()->id)
+                ->first();
+        }
 
         if (! $product) {
             return response()->json([
