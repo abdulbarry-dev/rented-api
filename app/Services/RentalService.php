@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\RentalCreated;
+use App\Events\RentalStatusChanged;
 use App\Models\Product;
 use App\Models\Rental;
 use App\Repositories\RentalRepository;
@@ -10,7 +12,10 @@ use Illuminate\Database\Eloquent\Collection;
 
 class RentalService
 {
-    public function __construct(private RentalRepository $repository) {}
+    public function __construct(
+        private RentalRepository $repository,
+        private NotificationService $notificationService
+    ) {}
 
     public function createRental(array $data, int $renterId): Rental
     {
@@ -36,7 +41,7 @@ class RentalService
         $days = $startDate->diffInDays($endDate) + 1; // Include both start and end day
         $totalPrice = $days * $product->price_per_day;
 
-        return $this->repository->create([
+        $rental = $this->repository->create([
             'product_id' => $product->id,
             'renter_id' => $renterId,
             'start_date' => $data['start_date'],
@@ -45,14 +50,68 @@ class RentalService
             'status' => Rental::STATUS_PENDING,
             'notes' => $data['notes'] ?? null,
         ]);
+
+        // Load relationships for broadcasting and notifications
+        $rental->load(['product.user', 'renter']);
+
+        // Create notification for product owner
+        $this->notificationService->notifyRentalRequested(
+            $rental->product->user,
+            $rental->id,
+            $rental->product_id,
+            $rental->product->title,
+            $rental->renter->name
+        );
+
+        // Broadcast rental created event
+        broadcast(new RentalCreated($rental));
+
+        return $rental;
     }
 
     public function updateRentalStatus(Rental $rental, string $status, ?string $notes = null): Rental
     {
-        return $this->repository->update($rental, [
+        $oldStatus = $rental->status;
+        
+        $rental = $this->repository->update($rental, [
             'status' => $status,
             'notes' => $notes ?? $rental->notes,
         ]);
+
+        // Load relationships for broadcasting and notifications
+        $rental->load(['product.user', 'renter']);
+
+        // Broadcast status changed event if status actually changed
+        if ($oldStatus !== $status) {
+            // Create notifications based on status change
+            if ($status === Rental::STATUS_APPROVED) {
+                // Notify renter that rental is confirmed
+                $this->notificationService->notifyRentalConfirmed(
+                    $rental->renter,
+                    $rental->id,
+                    $rental->product_id,
+                    $rental->product->title
+                );
+            } elseif ($status === Rental::STATUS_COMPLETED) {
+                // Notify both parties that rental is completed
+                $this->notificationService->notifyRentalCompleted(
+                    $rental->renter,
+                    $rental->id,
+                    $rental->product_id,
+                    $rental->product->title
+                );
+                $this->notificationService->notifyRentalCompleted(
+                    $rental->product->user,
+                    $rental->id,
+                    $rental->product_id,
+                    $rental->product->title
+                );
+            }
+
+            broadcast(new RentalStatusChanged($rental, $oldStatus));
+        }
+
+        return $rental;
     }
 
     public function getUserRentals(int $userId): Collection

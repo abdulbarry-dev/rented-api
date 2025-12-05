@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\User;
 use App\Repositories\ConversationRepository;
@@ -52,8 +53,14 @@ class ConversationService
 
         $this->conversationRepository->updateLastMessageAt($conversation);
 
+        // Load relationships for broadcasting
+        $message->load('sender');
+
+        // Broadcast the message event
+        broadcast(new MessageSent($message))->toOthers();
+
         return [
-            'message' => $message->load('sender'),
+            'message' => $message,
             'conversation' => $conversation,
         ];
     }
