@@ -29,6 +29,7 @@ class UpdateProfileRequest extends FormRequest
             'current_password' => 'required_with:password|string',
             'password' => 'sometimes|string|min:8|confirmed',
             'avatar_path' => 'sometimes|string|max:500',
+            'avatar_url' => 'sometimes|string|max:500', // Accept avatar_url and convert to path
         ];
     }
 
