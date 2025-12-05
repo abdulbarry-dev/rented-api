@@ -21,6 +21,7 @@ class ProductRepository
         return Cache::remember($cacheKey, 600, function () use ($perPage) {
             return Product::with(['category', 'user'])
                 ->where('is_available', true)
+                ->where('verification_status', 'approved')
                 ->latest()
                 ->paginate($perPage);
         });
@@ -34,6 +35,7 @@ class ProductRepository
         return Cache::remember('products.all', 600, function () {
             return Product::with(['category', 'user'])
                 ->where('is_available', true)
+                ->where('verification_status', 'approved')
                 ->latest()
                 ->get();
         });

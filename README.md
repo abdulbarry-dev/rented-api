@@ -35,9 +35,16 @@ The Rented Marketplace API is a RESTful API that allows users to rent or purchas
 ### Key Features
 
 - Token-based authentication (Laravel Sanctum)
+- Google OAuth authentication
 - User verification system with ID document upload
 - Avatar upload and management
+- **Product verification system (admin approval required)**
 - Product management with image uploads (CRUD operations)
+- Product reviews and ratings
+- Favourites/wishlist system
+- Real-time messaging between users
+- Rental availability calendar
+- Dispute resolution system
 - Rental and purchase flows
 - File upload support (images and documents)
 - Pagination support
@@ -1314,6 +1321,7 @@ curl -X POST "http://localhost:8000/api/v1/products" \
     "is_for_sale": true,
     "sale_price": "2500.00",
     "is_available": true,
+    "verification_status": "pending",
     "thumbnail_url": null,
     "image_urls": [
       "http://localhost:8000/storage/products/images/abc123xyz.jpg",
@@ -1336,6 +1344,13 @@ curl -X POST "http://localhost:8000/api/v1/products" \
   }
 }
 ```
+
+**Important Notes**:
+- ⚠️ **New products require approval**: All newly created products have `verification_status: "pending"` and will NOT appear in public listings until approved by an admin/moderator
+- Products are automatically set to `is_available: true` but won't be visible until verified
+- Users can view their own pending products via `/user/products`
+- Admin approval typically takes 24-48 hours
+- Once approved, products appear in public `/products` endpoint
 
 **Error Responses**:
 
@@ -3459,6 +3474,222 @@ Authorization: Bearer {token}
 - Automatically sets status to `resolved`
 - Sends notification to both parties
 - Resolution is permanent and cannot be edited
+
+---
+
+### Product Verification Endpoints (Admin/Moderator)
+
+#### Get Pending Products
+
+Retrieve all products pending verification approval.
+
+**Endpoint**: `GET /admin/products/pending`
+
+**Authentication**: Required (Admin/Moderator only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "data": [
+    {
+      "id": 25,
+      "title": "Professional Camera",
+      "description": "High-quality DSLR...",
+      "price_per_day": "50.00",
+      "verification_status": "pending",
+      "user": {
+        "id": 5,
+        "name": "John Doe",
+        "email": "john@example.com"
+      },
+      "category": {
+        "id": 2,
+        "name": "Electronics"
+      },
+      "created_at": "2025-12-05T10:00:00.000000Z"
+    }
+  ],
+  "links": {...},
+  "meta": {...}
+}
+```
+
+**Notes**:
+- Paginated with 20 items per page
+- Ordered by most recent first
+- Shows user and category information
+
+---
+
+#### Get Approved Products
+
+Retrieve all approved products.
+
+**Endpoint**: `GET /admin/products/approved`
+
+**Authentication**: Required (Admin/Moderator only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "data": [
+    {
+      "id": 15,
+      "title": "Mountain Bike",
+      "verification_status": "approved",
+      "verified_at": "2025-12-05T09:30:00.000000Z",
+      "user": {...},
+      "category": {...}
+    }
+  ],
+  "links": {...},
+  "meta": {...}
+}
+```
+
+---
+
+#### Get Rejected Products
+
+Retrieve all rejected products with rejection reasons.
+
+**Endpoint**: `GET /admin/products/rejected`
+
+**Authentication**: Required (Admin/Moderator only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "data": [
+    {
+      "id": 30,
+      "title": "Suspicious Item",
+      "verification_status": "rejected",
+      "rejection_reason": "Product description violates community guidelines",
+      "verified_at": "2025-12-05T11:00:00.000000Z",
+      "user": {...},
+      "category": {...}
+    }
+  ],
+  "links": {...},
+  "meta": {...}
+}
+```
+
+---
+
+#### Approve Product
+
+Approve a pending product for public listing.
+
+**Endpoint**: `POST /admin/products/{product}/approve`
+
+**Authentication**: Required (Admin/Moderator only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "message": "Product approved successfully",
+  "product": {
+    "id": 25,
+    "title": "Professional Camera",
+    "verification_status": "approved",
+    "verified_at": "2025-12-05T12:30:00.000000Z",
+    "rejection_reason": null
+  }
+}
+```
+
+**Notes**:
+- Product becomes visible in public listings
+- User receives approval notification
+- Sets `verified_at` timestamp
+- Clears any previous rejection reason
+
+---
+
+#### Reject Product
+
+Reject a product with a reason.
+
+**Endpoint**: `POST /admin/products/{product}/reject`
+
+**Authentication**: Required (Admin/Moderator only)
+
+**Headers**:
+
+```http
+Authorization: Bearer {token}
+```
+
+**Request Body**:
+
+```json
+{
+  "reason": "Product images are unclear. Please upload higher quality photos."
+}
+```
+
+**Validation Rules**:
+
+- `reason`: required, string, max 500 characters
+
+**Response** (200 OK):
+
+```json
+{
+  "message": "Product rejected successfully",
+  "product": {
+    "id": 25,
+    "title": "Professional Camera",
+    "verification_status": "rejected",
+    "rejection_reason": "Product images are unclear. Please upload higher quality photos.",
+    "verified_at": "2025-12-05T12:30:00.000000Z"
+  }
+}
+```
+
+**Common Rejection Reasons**:
+- Poor image quality
+- Incomplete product description
+- Prohibited items
+- Pricing violations
+- Duplicate listings
+- Suspected fraud
+
+**Notes**:
+- Product removed from public listings
+- User receives rejection notification with reason
+- User can edit and resubmit product
+- Sets `verified_at` timestamp for tracking
 
 ---
 

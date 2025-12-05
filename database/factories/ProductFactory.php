@@ -59,6 +59,8 @@ class ProductFactory extends Factory
             'is_for_sale' => $isForSale,
             'sale_price' => $isForSale ? fake()->randomFloat(2, 200, 3000) : null,
             'is_available' => fake()->boolean(85),
+            'verification_status' => fake()->randomElement(['pending', 'approved', 'approved', 'approved']), // 75% approved
+            'verified_at' => fake()->boolean(75) ? fake()->dateTimeBetween('-30 days', 'now') : null,
             'thumbnail' => fake()->imageUrl(640, 480, 'products'),
             'images' => [
                 fake()->imageUrl(640, 480, 'products'),

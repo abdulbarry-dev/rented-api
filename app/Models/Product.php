@@ -27,6 +27,9 @@ class Product extends Model
         'is_for_sale',
         'sale_price',
         'is_available',
+        'verification_status',
+        'rejection_reason',
+        'verified_at',
         'thumbnail',
         'images',
         'location_address',
@@ -68,6 +71,7 @@ class Product extends Model
         'min_rental_days' => 'integer',
         'max_rental_days' => 'integer',
         'delivery_radius_km' => 'integer',
+        'verified_at' => 'datetime',
     ];
 
     /**

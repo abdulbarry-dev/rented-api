@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\FavouriteController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductVerificationController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\RentalAvailabilityController;
 use App\Http\Controllers\Api\RentalController;
@@ -129,4 +130,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/disputes', [DisputeController::class, 'store']);
     Route::put('/disputes/{id}/status', [DisputeController::class, 'updateStatus']);
     Route::post('/disputes/{id}/resolve', [DisputeController::class, 'resolve']);
+
+    // Product Verification (Admin/Moderator Only)
+    Route::prefix('admin/products')->group(function () {
+        Route::get('/pending', [ProductVerificationController::class, 'pending']);
+        Route::get('/approved', [ProductVerificationController::class, 'approved']);
+        Route::get('/rejected', [ProductVerificationController::class, 'rejected']);
+        Route::post('/{product}/approve', [ProductVerificationController::class, 'approve']);
+        Route::post('/{product}/reject', [ProductVerificationController::class, 'reject']);
+    });
 });
