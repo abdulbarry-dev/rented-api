@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DisputeController;
 use App\Http\Controllers\Api\FavouriteController;
 use App\Http\Controllers\Api\ImageUploadController;
 use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OfferController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProductController;
@@ -130,6 +131,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Send messages
     Route::post('/messages', [MessageController::class, 'store']);
+    Route::post('/conversations/{id}/mark-read', [MessageController::class, 'markAsRead']);
+    Route::post('/conversations/{id}/typing', [MessageController::class, 'typing']);
 
     // Offers (Custom Offers in Conversations)
     Route::prefix('conversations/{conversation}')->group(function () {
@@ -142,6 +145,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rental Availability Management (Owner Only)
     Route::post('/products/{productId}/block-dates', [RentalAvailabilityController::class, 'blockForMaintenance']);
+
+    // Notifications (Authenticated Users)
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread', [NotificationController::class, 'unread']);
+    Route::get('/notifications/unread/count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
+    Route::delete('/notifications/read/clear', [NotificationController::class, 'deleteAllRead']);
 
     // Disputes (Authenticated Users)
     Route::get('/disputes', [DisputeController::class, 'index']);

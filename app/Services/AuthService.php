@@ -89,19 +89,19 @@ class AuthService
         // Handle avatar_url: convert full URL to path
         if (isset($data['avatar_url'])) {
             $avatarUrl = $data['avatar_url'];
-
+            
             // Extract path from URL (e.g., "http://domain/storage/avatars/file.jpg" -> "avatars/file.jpg")
             if (Str::contains($avatarUrl, '/storage/')) {
                 $data['avatar_path'] = Str::after($avatarUrl, '/storage/');
             } elseif (Str::contains($avatarUrl, 'avatars/')) {
                 // If URL contains avatars/, extract everything after it
                 $data['avatar_path'] = Str::after($avatarUrl, 'avatars/');
-                $data['avatar_path'] = 'avatars/'.$data['avatar_path'];
+                $data['avatar_path'] = 'avatars/' . $data['avatar_path'];
             } else {
                 // If it's already a path, use it directly
                 $data['avatar_path'] = $avatarUrl;
             }
-
+            
             // Remove avatar_url from data as we're using avatar_path
             unset($data['avatar_url']);
         }

@@ -67,9 +67,9 @@ class ProductService
                 }
             }
             $data['images'] = $processedImages;
-
+            
             // If thumbnail is not provided, use the first image as thumbnail
-            if (! isset($data['thumbnail']) || empty($data['thumbnail'])) {
+            if (!isset($data['thumbnail']) || empty($data['thumbnail'])) {
                 $data['thumbnail'] = $processedImages[0];
             }
         }
