@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Repositories\ProductRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 
 class ProductService
@@ -53,14 +54,34 @@ class ProductService
      */
     public function createProduct(User $user, array $data): Product
     {
-        // Handle thumbnail upload
-        if (isset($data['thumbnail'])) {
-            $data['thumbnail'] = $this->imageUploadService->uploadProductThumbnail($data['thumbnail']);
+        // Handle multiple images - check if they're files or paths
+        if (isset($data['images']) && is_array($data['images']) && count($data['images']) > 0) {
+            $processedImages = [];
+            foreach ($data['images'] as $image) {
+                // If it's a file (UploadedFile instance), upload it
+                if ($image instanceof UploadedFile) {
+                    $processedImages[] = $this->imageUploadService->uploadProductImages([$image])[0];
+                } else {
+                    // If it's already a path (string), use it directly
+                    $processedImages[] = $image;
+                }
+            }
+            $data['images'] = $processedImages;
+            
+            // If thumbnail is not provided, use the first image as thumbnail
+            if (!isset($data['thumbnail']) || empty($data['thumbnail'])) {
+                $data['thumbnail'] = $processedImages[0];
+            }
         }
 
-        // Handle multiple images upload
-        if (isset($data['images']) && is_array($data['images'])) {
-            $data['images'] = $this->imageUploadService->uploadProductImages($data['images']);
+        // Handle thumbnail - check if it's a file or a path
+        if (isset($data['thumbnail'])) {
+            // If it's a file (UploadedFile instance), upload it
+            if ($data['thumbnail'] instanceof UploadedFile) {
+                $data['thumbnail'] = $this->imageUploadService->uploadProductThumbnail($data['thumbnail']);
+            }
+            // If it's already a path (string), use it directly
+            // No action needed - path is already set
         }
 
         // Add user_id

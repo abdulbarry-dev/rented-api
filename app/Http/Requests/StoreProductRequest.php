@@ -29,9 +29,10 @@ class StoreProductRequest extends FormRequest
             'is_for_sale' => 'nullable|boolean',
             'sale_price' => 'nullable|numeric|min:1|max:999999.99|required_if:is_for_sale,true',
             'is_available' => 'nullable|boolean',
-            'thumbnail' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
-            'images' => 'nullable|array|max:5',
-            'images.*' => 'image|mimes:jpeg,jpg,png,webp|max:2048',
+            // Accept either file upload or path string (for pre-uploaded images)
+            'thumbnail' => 'nullable',
+            'images' => 'nullable|array|max:10',
+            'images.*' => 'nullable',
         ];
     }
 
@@ -54,11 +55,7 @@ class StoreProductRequest extends FormRequest
             'price_per_day.numeric' => 'Daily rental price must be a number.',
             'sale_price.required_if' => 'Sale price is required when product is for sale.',
             'sale_price.min' => 'Sale price must be at least 1.',
-            'thumbnail.image' => 'Thumbnail must be an image.',
-            'thumbnail.max' => 'Thumbnail must not exceed 2MB.',
-            'images.max' => 'You can upload a maximum of 5 images.',
-            'images.*.image' => 'All uploaded files must be images.',
-            'images.*.max' => 'Each image must not exceed 2MB.',
+            'images.max' => 'You can upload a maximum of 10 images.',
         ];
     }
 }
