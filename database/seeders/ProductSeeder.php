@@ -21,8 +21,17 @@ class ProductSeeder extends Seeder
             return;
         }
 
-        // Use laptop image for all products to test image upload functionality
-        $testImage = 'products/images/laptop_test.jpg';
+        // Public image URLs for product images (using Unsplash)
+        $productImages = [
+            'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800', // Headphones
+            'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800', // Watch
+            'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800', // Sunglasses
+            'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=800', // Sneakers
+            'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800', // Camera
+            'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800', // Laptop
+            'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800', // Bicycle
+            'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800', // Car
+        ];
 
         // Sample products for different categories
         $products = [
@@ -113,8 +122,12 @@ class ProductSeeder extends Seeder
                 'is_available' => true,
                 'verification_status' => 'approved', // Make products visible in API
                 'verified_at' => now(),
-                'thumbnail' => $testImage,
-                'images' => [$testImage, $testImage, $testImage],
+                'thumbnail' => $productImages[array_rand($productImages)],
+                'images' => [
+                    $productImages[array_rand($productImages)],
+                    $productImages[array_rand($productImages)],
+                    $productImages[array_rand($productImages)],
+                ],
                 'location_address' => fake()->streetAddress(),
                 'location_city' => $cities[$cityIndex],
                 'location_state' => $states[$cityIndex],
