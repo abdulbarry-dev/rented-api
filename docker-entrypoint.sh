@@ -23,7 +23,12 @@ if [ "$APP_ENV" = "local" ]; then
     php artisan db:seed --force
 fi
 
-# Clear and cache configuration
+# Clear all caches first
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+
+# Rebuild caches
 php artisan config:cache
 php artisan route:cache
 
