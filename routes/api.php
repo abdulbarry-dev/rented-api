@@ -99,10 +99,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/purchases/{id}/cancel', [PurchaseController::class, 'cancel']);
     Route::get('/user/purchases', [PurchaseController::class, 'userPurchases']);
 
-    // Reviews (Authenticated Users)
-    Route::post('/reviews', [ReviewController::class, 'store']);
-    Route::put('/reviews/{id}', [ReviewController::class, 'update']);
-    Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
+    // Reviews (Verified Users Only)
+    Route::middleware('verified')->group(function () {
+        Route::post('/reviews', [ReviewController::class, 'store']);
+        Route::put('/reviews/{id}', [ReviewController::class, 'update']);
+        Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
+    });
     Route::get('/user/reviews', [ReviewController::class, 'userReviews']);
 
     // Favourites (Authenticated Users)
