@@ -12,16 +12,9 @@ use Laravel\Socialite\Facades\Socialite;
 class SocialAuthController extends Controller
 {
     public function __construct(
-        private SocialAuthService $service,
-        private ?FirebaseService $firebaseService = null
+        private SocialAuthService $service
     ) {
-        // Initialize FirebaseService only if credentials file exists
-        try {
-            $this->firebaseService = app(FirebaseService::class);
-        } catch (\Exception $e) {
-            // Firebase not configured - will use basic validation
-            \Log::warning('FirebaseService not available: ' . $e->getMessage());
-        }
+        // FirebaseService will be resolved lazily if needed
     }
 
     /**
@@ -88,26 +81,25 @@ class SocialAuthController extends Controller
             $photoUrl = $request->input('photo_url');
 
             // Verify Firebase token if FirebaseService is available
-            if ($this->firebaseService) {
-                try {
-                    $verifiedToken = $this->firebaseService->verifyIdToken($idToken);
-                    
-                    // Use verified data from Firebase (more secure)
-                    $email = $verifiedToken['email'] ?? $email;
-                    $name = $verifiedToken['name'] ?? $name;
-                    $photoUrl = $verifiedToken['picture'] ?? $photoUrl;
-                    
-                    \Log::info('Firebase token verified', [
-                        'uid' => $verifiedToken['uid'],
-                        'email' => $email,
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::warning('Firebase token verification failed, using provided data', [
-                        'error' => $e->getMessage(),
-                    ]);
-                    // Continue with provided data if verification fails
-                    // In production, you might want to reject the request here
-                }
+            try {
+                $firebaseService = app(FirebaseService::class);
+                $verifiedToken = $firebaseService->verifyIdToken($idToken);
+                
+                // Use verified data from Firebase (more secure)
+                $email = $verifiedToken['email'] ?? $email;
+                $name = $verifiedToken['name'] ?? $name;
+                $photoUrl = $verifiedToken['picture'] ?? $photoUrl;
+                
+                \Log::info('Firebase token verified', [
+                    'uid' => $verifiedToken['uid'],
+                    'email' => $email,
+                ]);
+            } catch (\Exception $e) {
+                \Log::warning('Firebase token verification failed, using provided data', [
+                    'error' => $e->getMessage(),
+                ]);
+                // Continue with provided data if verification fails
+                // This allows the app to work even if Firebase Admin SDK is not configured
             }
 
             // Find or create user by email

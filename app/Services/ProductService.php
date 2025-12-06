@@ -8,7 +8,6 @@ use App\Repositories\ProductRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Cache;
 
 class ProductService
 {
@@ -93,9 +92,6 @@ class ProductService
 
         $product = $this->repository->create($data);
 
-        // Clear product caches
-        $this->clearProductCaches();
-
         return $product;
     }
 
@@ -125,9 +121,6 @@ class ProductService
 
         $this->repository->update($product, $data);
 
-        // Clear product caches
-        $this->clearProductCaches($product->id);
-
         return $product->fresh();
     }
 
@@ -149,28 +142,6 @@ class ProductService
 
         $result = $this->repository->delete($product);
 
-        // Clear product caches
-        $this->clearProductCaches($productId);
-
         return $result;
-    }
-
-    /**
-     * Clear product-related caches.
-     */
-    private function clearProductCaches(?int $productId = null): void
-    {
-        // Clear all products cache
-        Cache::forget('products.all');
-
-        // Clear paginated caches (clear first 10 pages)
-        for ($page = 1; $page <= 10; $page++) {
-            Cache::forget("products.paginated.page.{$page}.per_page.15");
-        }
-
-        // Clear specific product cache if ID provided
-        if ($productId) {
-            Cache::forget("products.{$productId}");
-        }
     }
 }

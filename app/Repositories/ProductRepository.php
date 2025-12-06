@@ -5,7 +5,6 @@ namespace App\Repositories;
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Cache;
 
 class ProductRepository
 {
@@ -15,16 +14,11 @@ class ProductRepository
      */
     public function getAllPaginated(int $perPage = 15): LengthAwarePaginator
     {
-        $page = request()->get('page', 1);
-        $cacheKey = "products.paginated.page.{$page}.per_page.{$perPage}";
-
-        return Cache::remember($cacheKey, 600, function () use ($perPage) {
-            return Product::with(['category', 'user'])
-                ->where('is_available', true)
-                ->where('verification_status', 'approved')
-                ->latest()
-                ->paginate($perPage);
-        });
+        return Product::with(['category', 'user'])
+            ->where('is_available', true)
+            ->where('verification_status', 'approved')
+            ->latest()
+            ->paginate($perPage);
     }
 
     /**
@@ -32,13 +26,11 @@ class ProductRepository
      */
     public function getAll(): Collection
     {
-        return Cache::remember('products.all', 600, function () {
-            return Product::with(['category', 'user'])
-                ->where('is_available', true)
-                ->where('verification_status', 'approved')
-                ->latest()
-                ->get();
-        });
+        return Product::with(['category', 'user'])
+            ->where('is_available', true)
+            ->where('verification_status', 'approved')
+            ->latest()
+            ->get();
     }
 
     /**
@@ -48,13 +40,11 @@ class ProductRepository
      */
     public function findById(int $id): ?Product
     {
-        return Cache::remember("products.{$id}", 600, function () use ($id) {
-            return Product::with(['category', 'user'])
-                ->where('id', $id)
-                ->where('is_available', true)
-                ->where('verification_status', 'approved')
-                ->first();
-        });
+        return Product::with(['category', 'user'])
+            ->where('id', $id)
+            ->where('is_available', true)
+            ->where('verification_status', 'approved')
+            ->first();
     }
 
     /**

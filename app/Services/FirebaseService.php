@@ -9,18 +9,43 @@ use Illuminate\Support\Facades\Log;
 
 class FirebaseService
 {
-    private Auth $auth;
+    private ?Auth $auth = null;
+    private bool $isInitialized = false;
 
     public function __construct()
     {
+        // Don't initialize in constructor - do it lazily
+    }
+
+    /**
+     * Initialize Firebase Auth (lazy initialization)
+     */
+    private function initialize(): void
+    {
+        if ($this->isInitialized) {
+            return;
+        }
+
         $credentialsPath = storage_path('app/firebase-credentials.json');
         
         if (!file_exists($credentialsPath)) {
+            Log::warning('Firebase credentials file not found', [
+                'path' => $credentialsPath,
+            ]);
             throw new \RuntimeException('Firebase credentials file not found at: ' . $credentialsPath);
         }
 
-        $factory = (new Factory)->withServiceAccount($credentialsPath);
-        $this->auth = $factory->createAuth();
+        try {
+            $factory = (new Factory)->withServiceAccount($credentialsPath);
+            $this->auth = $factory->createAuth();
+            $this->isInitialized = true;
+        } catch (\Exception $e) {
+            Log::error('Failed to initialize Firebase', [
+                'error' => $e->getMessage(),
+                'path' => $credentialsPath,
+            ]);
+            throw new \RuntimeException('Failed to initialize Firebase: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -32,6 +57,12 @@ class FirebaseService
      */
     public function verifyIdToken(string $idToken): array
     {
+        $this->initialize(); // Lazy initialization
+        
+        if (!$this->auth) {
+            throw new \RuntimeException('Firebase Auth not initialized');
+        }
+
         try {
             $verifiedToken = $this->auth->verifyIdToken($idToken);
             
@@ -63,6 +94,12 @@ class FirebaseService
      */
     public function getUser(string $uid): array
     {
+        $this->initialize(); // Lazy initialization
+        
+        if (!$this->auth) {
+            throw new \RuntimeException('Firebase Auth not initialized');
+        }
+
         try {
             $user = $this->auth->getUser($uid);
             
