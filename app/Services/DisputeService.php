@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Collection;
 class DisputeService
 {
     public function __construct(
-        private DisputeRepository $repository
+        private DisputeRepository $repository,
+        private NotificationService $notificationService
     ) {}
 
     /**
@@ -37,7 +38,22 @@ class DisputeService
         $data['reported_by'] = $user->id;
         $data['status'] = 'open';
 
-        return $this->repository->create($data);
+        $dispute = $this->repository->create($data);
+
+        // Load relationships for notifications
+        $dispute->load('reportedUser');
+
+        // Create notification for the user being reported against
+        if ($dispute->reported_against && $dispute->reportedUser) {
+            $disputeType = $dispute->dispute_type ?? 'transaction';
+            $this->notificationService->notifyDisputeOpened(
+                $dispute->reportedUser,
+                $dispute->id,
+                $disputeType
+            );
+        }
+
+        return $dispute;
     }
 
     /**
@@ -53,7 +69,29 @@ class DisputeService
      */
     public function resolveDispute(Dispute $dispute, string $resolution): bool
     {
-        return $this->repository->resolve($dispute, $resolution);
+        $result = $this->repository->resolve($dispute, $resolution);
+
+        // Load relationships for notifications
+        $dispute->load(['reporter', 'reportedUser']);
+
+        // Create notifications for both parties
+        if ($dispute->reporter) {
+            $this->notificationService->notifyDisputeResolved(
+                $dispute->reporter,
+                $dispute->id,
+                $resolution
+            );
+        }
+
+        if ($dispute->reportedUser) {
+            $this->notificationService->notifyDisputeResolved(
+                $dispute->reportedUser,
+                $dispute->id,
+                $resolution
+            );
+        }
+
+        return $result;
     }
 
     /**

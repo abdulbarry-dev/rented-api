@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DisputeController;
 use App\Http\Controllers\Api\FavouriteController;
+use App\Http\Controllers\Api\FcmController;
 use App\Http\Controllers\Api\ImageUploadController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
@@ -37,6 +38,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // Google OAuth
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
+Route::post('/auth/google/firebase', [SocialAuthController::class, 'handleFirebaseAuth']);
 
 // Password Reset (No Authentication Required)
 Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
@@ -70,6 +72,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/avatar', [AuthController::class, 'updateAvatar']);
     Route::delete('/user/avatar', [AuthController::class, 'deleteAvatar']);
     Route::delete('/user/account', [AuthController::class, 'deleteAccount']);
+
+    // FCM Device Token Management
+    Route::post('/fcm/token', [FcmController::class, 'updateToken']);
+    Route::delete('/fcm/token', [FcmController::class, 'deleteToken']);
+    Route::get('/fcm/tokens', [FcmController::class, 'getTokens']);
 
     // Image Upload Endpoints
     Route::post('/upload/image', [ImageUploadController::class, 'uploadSingle']);

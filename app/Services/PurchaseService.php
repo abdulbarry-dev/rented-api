@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\Collection;
 
 class PurchaseService
 {
-    public function __construct(private PurchaseRepository $repository) {}
+    public function __construct(
+        private PurchaseRepository $repository,
+        private NotificationService $notificationService
+    ) {}
 
     public function createPurchase(array $data, int $buyerId): Purchase
     {
@@ -46,14 +49,39 @@ class PurchaseService
         // Mark product as unavailable
         $product->update(['is_available' => false]);
 
+        // Load relationships for notifications
+        $purchase->load(['product.user', 'buyer']);
+
+        // Create notification for product owner
+        $this->notificationService->notifyPurchaseOrdered(
+            $purchase->product->user,
+            $purchase->id,
+            $purchase->product_id,
+            $purchase->product->title,
+            $purchase->buyer->name
+        );
+
         return $purchase;
     }
 
     public function completePurchase(Purchase $purchase): Purchase
     {
-        return $this->repository->update($purchase, [
+        $purchase = $this->repository->update($purchase, [
             'status' => Purchase::STATUS_COMPLETED,
         ]);
+
+        // Load relationships for notifications
+        $purchase->load(['product.user', 'buyer']);
+
+        // Create notification for buyer
+        $this->notificationService->notifyPurchaseCompleted(
+            $purchase->buyer,
+            $purchase->id,
+            $purchase->product_id,
+            $purchase->product->title
+        );
+
+        return $purchase;
     }
 
     public function cancelPurchase(Purchase $purchase): Purchase

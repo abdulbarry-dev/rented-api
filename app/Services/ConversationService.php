@@ -13,7 +13,8 @@ class ConversationService
 {
     public function __construct(
         private ConversationRepository $conversationRepository,
-        private MessageRepository $messageRepository
+        private MessageRepository $messageRepository,
+        private NotificationService $notificationService
     ) {}
 
     /**
@@ -53,8 +54,24 @@ class ConversationService
 
         $this->conversationRepository->updateLastMessageAt($conversation);
 
-        // Load relationships for broadcasting
+        // Load relationships for broadcasting and notifications
         $message->load('sender');
+        $conversation->load(['userOne', 'userTwo', 'product']);
+
+        // Get receiver (the other participant)
+        $receiver = $conversation->user_one_id === $sender->id 
+            ? $conversation->userTwo 
+            : $conversation->userOne;
+
+        // Create notification for receiver (only if not the sender)
+        if ($receiver && $receiver->id !== $sender->id) {
+            $this->notificationService->notifyNewMessage(
+                $receiver,
+                $conversation->id,
+                $conversation->product_id ?? 0,
+                $sender->name
+            );
+        }
 
         // Broadcast the message event
         broadcast(new MessageSent($message))->toOthers();

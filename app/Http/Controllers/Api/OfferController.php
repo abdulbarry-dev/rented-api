@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Rental;
 use App\Models\RentalAvailability;
+use App\Services\NotificationService;
 use Carbon\CarbonPeriod;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,10 @@ use Illuminate\Http\Request;
 class OfferController extends Controller
 {
     use AuthorizesRequests;
+
+    public function __construct(
+        private NotificationService $notificationService
+    ) {}
 
     public function index(Request $request, Conversation $conversation): JsonResponse
     {
@@ -84,6 +89,17 @@ class OfferController extends Controller
         $conversation->update(['last_message_at' => now()]);
         $offer->load(['sender', 'receiver', 'product']);
 
+        // Create notification for receiver
+        if ($offer->receiver) {
+            $this->notificationService->notifyOfferReceived(
+                $offer->receiver,
+                $offer->id,
+                $offer->product_id,
+                $offer->product->title,
+                $offer->amount
+            );
+        }
+
         return response()->json(['message' => 'Offer created successfully', 'data' => new OfferResource($offer)], 201);
     }
 
@@ -127,12 +143,11 @@ class OfferController extends Controller
         if ($offer->offer_type === 'rental') {
             $rental = Rental::create([
                 'product_id' => $offer->product_id,
-                'user_id' => $offer->sender_id,
+                'renter_id' => $offer->sender_id,
                 'start_date' => $offer->start_date,
                 'end_date' => $offer->end_date,
                 'total_price' => $offer->amount,
                 'status' => 'pending',
-                'delivery_required' => false,
                 'notes' => 'Created from accepted offer #'.$offer->id,
             ]);
 
@@ -149,10 +164,9 @@ class OfferController extends Controller
         } else {
             Purchase::create([
                 'product_id' => $offer->product_id,
-                'user_id' => $offer->sender_id,
+                'buyer_id' => $offer->sender_id,
                 'purchase_price' => $offer->amount,
                 'status' => 'pending',
-                'delivery_required' => false,
                 'notes' => 'Created from accepted offer #'.$offer->id,
             ]);
         }
@@ -165,6 +179,16 @@ class OfferController extends Controller
 
         $conversation->update(['last_message_at' => now()]);
         $offer->load(['sender', 'receiver', 'product']);
+
+        // Create notification for offer sender
+        if ($offer->sender) {
+            $this->notificationService->notifyOfferAccepted(
+                $offer->sender,
+                $offer->id,
+                $offer->product_id,
+                $offer->product->title
+            );
+        }
 
         return response()->json(['message' => 'Offer accepted successfully', 'data' => new OfferResource($offer)]);
     }
@@ -191,6 +215,16 @@ class OfferController extends Controller
 
         $conversation->update(['last_message_at' => now()]);
         $offer->load(['sender', 'receiver', 'product']);
+
+        // Create notification for offer sender
+        if ($offer->sender) {
+            $this->notificationService->notifyOfferRejected(
+                $offer->sender,
+                $offer->id,
+                $offer->product_id,
+                $offer->product->title
+            );
+        }
 
         return response()->json(['message' => 'Offer rejected successfully', 'data' => new OfferResource($offer)]);
     }

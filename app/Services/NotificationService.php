@@ -6,6 +6,7 @@ use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class NotificationService
 {
@@ -41,17 +42,33 @@ class NotificationService
     }
 
     /**
-     * Create a notification.
+     * Create a notification and send FCM push notification.
      */
     public function create(User $user, string $type, string $title, string $message, ?array $data = null): Notification
     {
-        return Notification::create([
+        // Create database notification
+        $notification = Notification::create([
             'user_id' => $user->id,
             'type' => $type,
             'title' => $title,
             'message' => $message,
             'data' => $data,
         ]);
+
+        // Send FCM push notification
+        try {
+            $fcmService = app(FcmNotificationService::class);
+            $fcmService->sendToUser($user, $title, $message, $data ?? [], $type);
+        } catch (\Exception $e) {
+            // Log error but don't fail the notification creation
+            Log::warning('Failed to send FCM notification', [
+                'user_id' => $user->id,
+                'notification_id' => $notification->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $notification;
     }
 
     /**

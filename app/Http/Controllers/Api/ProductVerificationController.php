@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProductVerificationController extends Controller
 {
+    public function __construct(
+        private NotificationService $notificationService
+    ) {}
     /**
      * Get all pending products for verification.
      */
@@ -33,6 +37,18 @@ class ProductVerificationController extends Controller
             'rejection_reason' => null,
         ]);
 
+        // Load user relationship for notification
+        $product->load('user');
+
+        // Create notification for product owner
+        if ($product->user) {
+            $this->notificationService->notifyProductApproved(
+                $product->user,
+                $product->id,
+                $product->title
+            );
+        }
+
         return response()->json([
             'message' => 'Product approved successfully',
             'product' => $product->fresh(),
@@ -53,6 +69,19 @@ class ProductVerificationController extends Controller
             'rejection_reason' => $request->reason,
             'verified_at' => now(),
         ]);
+
+        // Load user relationship for notification
+        $product->load('user');
+
+        // Create notification for product owner
+        if ($product->user) {
+            $this->notificationService->notifyProductRejected(
+                $product->user,
+                $product->id,
+                $product->title,
+                $request->reason
+            );
+        }
 
         return response()->json([
             'message' => 'Product rejected successfully',

@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Collection;
 class ReviewService
 {
     public function __construct(
-        private ReviewRepository $repository
+        private ReviewRepository $repository,
+        private NotificationService $notificationService
     ) {}
 
     /**
@@ -49,7 +50,23 @@ class ReviewService
 
         $data['user_id'] = $user->id;
 
-        return $this->repository->create($data);
+        $review = $this->repository->create($data);
+
+        // Load relationships for notifications
+        $review->load(['product.user']);
+
+        // Create notification for product owner
+        if ($review->product->user && $review->product->user->id !== $user->id) {
+            $this->notificationService->notifyReviewReceived(
+                $review->product->user,
+                $review->id,
+                $review->product_id,
+                $review->product->title,
+                $review->rating
+            );
+        }
+
+        return $review;
     }
 
     /**
