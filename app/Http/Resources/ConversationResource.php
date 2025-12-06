@@ -28,6 +28,10 @@ class ConversationResource extends JsonResource
                 'id' => $this->product->id,
                 'title' => $this->product->title,
                 'thumbnail' => $this->product->thumbnail_url,
+                'thumbnail_url' => $this->product->thumbnail_url,
+                'images' => $this->product->image_urls,
+                'image_urls' => $this->product->image_urls,
+                'price_per_day' => $this->product->price_per_day,
             ] : null,
             'last_message' => $this->messages->first() ? [
                 'content' => $this->messages->first()->content,

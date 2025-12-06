@@ -103,10 +103,21 @@ class ProductController extends Controller
     /**
      * Update the specified product.
      * Only product owner can update.
+     * Allows owners to update their products even if not approved or unavailable.
      */
     public function update(UpdateProductRequest $request, int $id): JsonResponse
     {
+        // Try to get approved product first
         $product = $this->service->getProductById($id);
+
+        // If not found, check if it belongs to the authenticated user
+        // This allows owners to update their products even if not approved or unavailable
+        if (! $product) {
+            $product = Product::with(['category', 'user'])
+                ->where('id', $id)
+                ->where('user_id', $request->user()->id)
+                ->first();
+        }
 
         if (! $product) {
             return response()->json([
@@ -127,10 +138,21 @@ class ProductController extends Controller
     /**
      * Remove the specified product.
      * Only product owner can delete.
+     * Allows owners to delete their products even if not approved or unavailable.
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        // Try to get approved product first
         $product = $this->service->getProductById($id);
+
+        // If not found, check if it belongs to the authenticated user
+        // This allows owners to delete their products even if not approved or unavailable
+        if (! $product) {
+            $product = Product::with(['category', 'user'])
+                ->where('id', $id)
+                ->where('user_id', $request->user()->id)
+                ->first();
+        }
 
         if (! $product) {
             return response()->json([
